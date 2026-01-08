@@ -13,7 +13,7 @@ interface Product {
   images: string[];
 }
 
-export default function HighlightSection() {
+const HighlightSection = () => {
   const [highlight, setHighlight] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -135,4 +135,6 @@ export default function HighlightSection() {
       </div>
     </section>
   );
-}
+};
+
+export default HighlightSection;

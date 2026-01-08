@@ -12,7 +12,7 @@ interface ProductCardProps {
   isHighlight?: boolean;
 }
 
-export default function ProductCard({ 
+const ProductCard = ({ 
   id, 
   name, 
   category, 
@@ -20,7 +20,7 @@ export default function ProductCard({
   image, 
   featured, 
   isHighlight 
-}: ProductCardProps) {
+}: ProductCardProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -86,4 +86,6 @@ export default function ProductCard({
       </Link>
     </motion.div>
   );
-}
+};
+
+export default ProductCard;
