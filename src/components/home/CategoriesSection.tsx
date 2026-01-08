@@ -18,7 +18,7 @@ const categoryImages: Record<string, string> = {
   'Bags': 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600',
 };
 
-export default function CategoriesSection() {
+const CategoriesSection = () => {
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
@@ -95,4 +95,6 @@ export default function CategoriesSection() {
       </div>
     </section>
   );
-}
+};
+
+export default CategoriesSection;

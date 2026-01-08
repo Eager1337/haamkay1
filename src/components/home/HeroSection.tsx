@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import FloatingDiamonds from '../3d/FloatingDiamonds';
 
-export default function HeroSection() {
+const HeroSection = () => {
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
       {/* Background Image */}
@@ -16,7 +16,7 @@ export default function HeroSection() {
         <div className="absolute inset-0 bg-gradient-hero" />
       </div>
 
-      {/* 3D Floating Elements */}
+      {/* Floating Elements */}
       <FloatingDiamonds />
 
       {/* Content */}
@@ -97,4 +97,6 @@ export default function HeroSection() {
       </div>
     </section>
   );
-}
+};
+
+export default HeroSection;

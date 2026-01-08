@@ -12,7 +12,7 @@ const navLinks = [
   { name: 'Contact', path: '/contact' },
 ];
 
-export default function Header() {
+const Header = () => {
   const location = useLocation();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -116,4 +116,6 @@ export default function Header() {
       )}
     </motion.header>
   );
-}
+};
+
+export default Header;

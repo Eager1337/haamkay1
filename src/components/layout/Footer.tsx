@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Instagram, Facebook, Twitter, Settings, MapPin, Phone, Mail } from 'lucide-react';
 
-export default function Footer() {
+const Footer = () => {
   return (
     <footer className="bg-teal-darker border-t border-border">
       <div className="container mx-auto px-6 py-16">
@@ -160,4 +160,6 @@ export default function Footer() {
       </div>
     </footer>
   );
-}
+};
+
+export default Footer;

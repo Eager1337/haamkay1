@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Send, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function NewsletterSection() {
+const NewsletterSection = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -74,4 +74,6 @@ export default function NewsletterSection() {
       </div>
     </section>
   );
-}
+};
+
+export default NewsletterSection;

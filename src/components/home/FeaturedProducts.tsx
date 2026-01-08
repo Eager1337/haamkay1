@@ -15,7 +15,7 @@ interface Product {
   is_highlight: boolean;
 }
 
-export default function FeaturedProducts() {
+const FeaturedProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -132,4 +132,6 @@ export default function FeaturedProducts() {
       </div>
     </section>
   );
-}
+};
+
+export default FeaturedProducts;
