@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plus, Edit, Trash2, Star, Sparkles, Upload, LogOut, Package, Image, Video } from 'lucide-react';
+import { 
+  Plus, Edit, Trash2, Star, Sparkles, Upload, LogOut, Package, Image, Video,
+  LayoutDashboard, FolderOpen, ShoppingCart, BarChart3, Settings, Users,
+  Download, RefreshCw, Search, Filter, ChevronDown, Eye, Copy, Layers
+} from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -19,8 +23,20 @@ interface Product {
   created_at: string;
 }
 
-export default function AdminDashboard() {
+const navItems = [
+  { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
+  { name: 'Products', path: '/admin/products', icon: Package },
+  { name: 'Categories', path: '/admin/categories', icon: FolderOpen },
+  { name: 'Bulk Upload', path: '/admin/bulk-upload', icon: Layers },
+  { name: 'Orders', path: '/admin/orders', icon: ShoppingCart },
+  { name: 'Analytics', path: '/admin/analytics', icon: BarChart3 },
+  { name: 'Customers', path: '/admin/customers', icon: Users },
+  { name: 'Settings', path: '/admin/settings', icon: Settings },
+];
+
+const AdminDashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +44,9 @@ export default function AdminDashboard() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [uploading, setUploading] = useState(false);
   const [dailyUploads, setDailyUploads] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
 
   const [form, setForm] = useState({
     name: '', category: '', price: 0, description: '', stock: 0,
@@ -68,7 +87,6 @@ export default function AdminDashboard() {
     }
     setForm(f => ({ ...f, [type]: [...f[type], ...urls] }));
     
-    // Update daily uploads
     await supabase.from('daily_uploads').upsert({ 
       upload_date: new Date().toISOString().split('T')[0], 
       count: dailyUploads + urls.length 
@@ -100,10 +118,46 @@ export default function AdminDashboard() {
     fetchData();
   };
 
+  const handleBulkDelete = async () => {
+    if (!confirm(`Delete ${selectedProducts.length} products?`)) return;
+    for (const id of selectedProducts) {
+      await supabase.from('products').delete().eq('id', id);
+    }
+    toast.success(`${selectedProducts.length} products deleted!`);
+    setSelectedProducts([]);
+    fetchData();
+  };
+
   const toggleHighlight = async (id: string, current: boolean) => {
     if (!current) await supabase.from('products').update({ is_highlight: false }).neq('id', id);
     await supabase.from('products').update({ is_highlight: !current }).eq('id', id);
     fetchData();
+  };
+
+  const toggleFeatured = async (id: string, current: boolean) => {
+    await supabase.from('products').update({ featured: !current }).eq('id', id);
+    fetchData();
+  };
+
+  const duplicateProduct = async (product: Product) => {
+    const { id, created_at, ...rest } = product;
+    await supabase.from('products').insert({ ...rest, name: `${rest.name} (Copy)` });
+    toast.success('Product duplicated!');
+    fetchData();
+  };
+
+  const exportProducts = () => {
+    const csv = [
+      ['Name', 'Category', 'Price', 'Stock', 'Featured', 'Highlight'].join(','),
+      ...products.map(p => [p.name, p.category, p.price, p.stock, p.featured, p.is_highlight].join(','))
+    ].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'products.csv';
+    a.click();
+    toast.success('Products exported!');
   };
 
   const resetForm = () => {
@@ -118,32 +172,120 @@ export default function AdminDashboard() {
     setShowForm(true);
   };
 
+  const filteredProducts = products.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          p.category.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = categoryFilter === 'all' || p.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
+
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><div className="text-gold">Loading...</div></div>;
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-background flex">
+      {/* Sidebar */}
+      <aside className="w-64 bg-card border-r border-border p-6 flex flex-col">
+        <div className="mb-8">
+          <h1 className="text-xl font-serif font-bold text-gold">Haamkay Admin</h1>
+        </div>
+        <nav className="flex-1 space-y-2">
+          {navItems.map(item => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                location.pathname === item.path
+                  ? 'bg-gold/20 text-gold'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}
+            >
+              <item.icon className="w-5 h-5" />
+              {item.name}
+            </Link>
+          ))}
+        </nav>
+        <button
+          onClick={() => { sessionStorage.removeItem('adminAuth'); navigate('/'); }}
+          className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-destructive/20 hover:text-destructive transition-colors"
+        >
+          <LogOut className="w-5 h-5" />
+          Logout
+        </button>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 p-8 overflow-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-serif font-bold text-foreground">Admin Dashboard</h1>
-            <p className="text-muted-foreground">Today's uploads: {dailyUploads}</p>
+            <h1 className="text-3xl font-serif font-bold text-foreground">Dashboard</h1>
+            <p className="text-muted-foreground">Welcome back! Here's your store overview.</p>
           </div>
-          <div className="flex gap-4">
-            <button onClick={() => { setShowForm(true); setEditingProduct(null); }} className="btn-gold flex items-center gap-2">
-              <Plus className="w-5 h-5" /> Add Product
-            </button>
-            <button onClick={() => { sessionStorage.removeItem('adminAuth'); navigate('/'); }} className="btn-outline-gold flex items-center gap-2">
-              <LogOut className="w-5 h-5" /> Logout
+          <div className="flex gap-3">
+            <Link to="/admin/bulk-upload" className="btn-outline-gold flex items-center gap-2 !py-2 !px-4">
+              <Layers className="w-4 h-4" /> Bulk Upload
+            </Link>
+            <button onClick={() => { setShowForm(true); setEditingProduct(null); }} className="btn-gold flex items-center gap-2 !py-2 !px-4">
+              <Plus className="w-4 h-4" /> Add Product
             </button>
           </div>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="card-luxury p-4"><Package className="w-6 h-6 text-gold mb-2" /><div className="text-2xl font-bold text-foreground">{products.length}</div><div className="text-muted-foreground text-sm">Products</div></div>
-          <div className="card-luxury p-4"><Star className="w-6 h-6 text-gold mb-2" /><div className="text-2xl font-bold text-foreground">{products.filter(p => p.featured).length}</div><div className="text-muted-foreground text-sm">Featured</div></div>
-          <div className="card-luxury p-4"><Upload className="w-6 h-6 text-gold mb-2" /><div className="text-2xl font-bold text-foreground">{dailyUploads}</div><div className="text-muted-foreground text-sm">Uploads Today</div></div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="card-luxury p-4">
+            <Package className="w-6 h-6 text-gold mb-2" />
+            <div className="text-2xl font-bold text-foreground">{products.length}</div>
+            <div className="text-muted-foreground text-sm">Total Products</div>
+          </div>
+          <div className="card-luxury p-4">
+            <Star className="w-6 h-6 text-gold mb-2" />
+            <div className="text-2xl font-bold text-foreground">{products.filter(p => p.featured).length}</div>
+            <div className="text-muted-foreground text-sm">Featured</div>
+          </div>
+          <div className="card-luxury p-4">
+            <FolderOpen className="w-6 h-6 text-gold mb-2" />
+            <div className="text-2xl font-bold text-foreground">{categories.length}</div>
+            <div className="text-muted-foreground text-sm">Categories</div>
+          </div>
+          <div className="card-luxury p-4">
+            <Upload className="w-6 h-6 text-gold mb-2" />
+            <div className="text-2xl font-bold text-foreground">{dailyUploads}</div>
+            <div className="text-muted-foreground text-sm">Uploads Today</div>
+          </div>
+        </div>
+
+        {/* Toolbar */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full bg-muted border border-border rounded-lg pl-10 pr-4 py-2 text-foreground"
+            />
+          </div>
+          <select
+            value={categoryFilter}
+            onChange={e => setCategoryFilter(e.target.value)}
+            className="bg-muted border border-border rounded-lg px-4 py-2 text-foreground"
+          >
+            <option value="all">All Categories</option>
+            {categories.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <button onClick={fetchData} className="p-2 bg-muted rounded-lg text-muted-foreground hover:text-gold">
+            <RefreshCw className="w-5 h-5" />
+          </button>
+          <button onClick={exportProducts} className="p-2 bg-muted rounded-lg text-muted-foreground hover:text-gold">
+            <Download className="w-5 h-5" />
+          </button>
+          {selectedProducts.length > 0 && (
+            <button onClick={handleBulkDelete} className="px-4 py-2 bg-destructive text-foreground rounded-lg">
+              Delete ({selectedProducts.length})
+            </button>
+          )}
         </div>
 
         {/* Product Form Modal */}
@@ -163,16 +305,15 @@ export default function AdminDashboard() {
                 </div>
                 <textarea placeholder="Description" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="w-full bg-muted border border-border rounded-lg px-4 py-3 text-foreground h-24" />
                 
-                {/* Bulk Upload */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm text-foreground mb-2"><Image className="w-4 h-4 inline mr-1" />Images (bulk)</label>
-                    <input type="file" multiple accept="image/*" onChange={e => e.target.files && handleFileUpload(e.target.files, 'images')} className="w-full text-sm text-muted-foreground file:btn-gold file:mr-2" disabled={uploading} />
+                    <input type="file" multiple accept="image/*" onChange={e => e.target.files && handleFileUpload(e.target.files, 'images')} className="w-full text-sm text-muted-foreground file:btn-gold file:mr-2 file:!py-1 file:!px-3" disabled={uploading} />
                     <div className="flex flex-wrap gap-2 mt-2">{form.images.map((img, i) => <img key={i} src={img} className="w-12 h-12 object-cover rounded" />)}</div>
                   </div>
                   <div>
                     <label className="block text-sm text-foreground mb-2"><Video className="w-4 h-4 inline mr-1" />Videos (bulk)</label>
-                    <input type="file" multiple accept="video/*" onChange={e => e.target.files && handleFileUpload(e.target.files, 'videos')} className="w-full text-sm text-muted-foreground file:btn-gold file:mr-2" disabled={uploading} />
+                    <input type="file" multiple accept="video/*" onChange={e => e.target.files && handleFileUpload(e.target.files, 'videos')} className="w-full text-sm text-muted-foreground file:btn-gold file:mr-2 file:!py-1 file:!px-3" disabled={uploading} />
                     <div className="text-xs text-muted-foreground mt-1">{form.videos.length} videos uploaded</div>
                   </div>
                 </div>
@@ -195,27 +336,75 @@ export default function AdminDashboard() {
         <div className="card-luxury overflow-hidden">
           <table className="w-full">
             <thead className="bg-muted">
-              <tr><th className="p-4 text-left text-foreground">Product</th><th className="p-4 text-left text-foreground">Category</th><th className="p-4 text-left text-foreground">Price</th><th className="p-4 text-left text-foreground">Stock</th><th className="p-4 text-left text-foreground">Status</th><th className="p-4 text-right text-foreground">Actions</th></tr>
+              <tr>
+                <th className="p-4 text-left">
+                  <input
+                    type="checkbox"
+                    checked={selectedProducts.length === filteredProducts.length && filteredProducts.length > 0}
+                    onChange={e => setSelectedProducts(e.target.checked ? filteredProducts.map(p => p.id) : [])}
+                    className="accent-gold"
+                  />
+                </th>
+                <th className="p-4 text-left text-foreground">Product</th>
+                <th className="p-4 text-left text-foreground">Category</th>
+                <th className="p-4 text-left text-foreground">Price</th>
+                <th className="p-4 text-left text-foreground">Stock</th>
+                <th className="p-4 text-left text-foreground">Status</th>
+                <th className="p-4 text-right text-foreground">Actions</th>
+              </tr>
             </thead>
             <tbody>
-              {products.map(p => (
+              {filteredProducts.map(p => (
                 <tr key={p.id} className="border-t border-border">
-                  <td className="p-4 flex items-center gap-3"><img src={p.images?.[0] || '/placeholder.svg'} className="w-12 h-12 rounded object-cover" /><span className="text-foreground">{p.name}</span></td>
+                  <td className="p-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedProducts.includes(p.id)}
+                      onChange={e => setSelectedProducts(prev => e.target.checked ? [...prev, p.id] : prev.filter(id => id !== p.id))}
+                      className="accent-gold"
+                    />
+                  </td>
+                  <td className="p-4 flex items-center gap-3">
+                    <img src={p.images?.[0] || '/placeholder.svg'} className="w-12 h-12 rounded object-cover" />
+                    <span className="text-foreground">{p.name}</span>
+                  </td>
                   <td className="p-4 text-muted-foreground">{p.category}</td>
                   <td className="p-4 text-gold font-semibold">Le {p.price.toLocaleString()}</td>
                   <td className="p-4 text-muted-foreground">{p.stock}</td>
-                  <td className="p-4"><div className="flex gap-2">{p.featured && <span className="px-2 py-1 bg-gold/20 text-gold text-xs rounded">Featured</span>}{p.is_highlight && <span className="px-2 py-1 bg-destructive/20 text-destructive text-xs rounded">Highlight</span>}</div></td>
+                  <td className="p-4">
+                    <div className="flex gap-2">
+                      {p.featured && <span className="px-2 py-1 bg-gold/20 text-gold text-xs rounded">Featured</span>}
+                      {p.is_highlight && <span className="px-2 py-1 bg-destructive/20 text-destructive text-xs rounded">Highlight</span>}
+                    </div>
+                  </td>
                   <td className="p-4 text-right">
-                    <button onClick={() => toggleHighlight(p.id, p.is_highlight)} className="p-2 text-muted-foreground hover:text-gold"><Sparkles className="w-4 h-4" /></button>
-                    <button onClick={() => startEdit(p)} className="p-2 text-muted-foreground hover:text-gold"><Edit className="w-4 h-4" /></button>
-                    <button onClick={() => handleDelete(p.id)} className="p-2 text-muted-foreground hover:text-destructive"><Trash2 className="w-4 h-4" /></button>
+                    <button onClick={() => window.open(`/product/${p.id}`, '_blank')} className="p-2 text-muted-foreground hover:text-gold" title="View">
+                      <Eye className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => toggleFeatured(p.id, p.featured)} className="p-2 text-muted-foreground hover:text-gold" title="Toggle Featured">
+                      <Star className={`w-4 h-4 ${p.featured ? 'fill-gold text-gold' : ''}`} />
+                    </button>
+                    <button onClick={() => toggleHighlight(p.id, p.is_highlight)} className="p-2 text-muted-foreground hover:text-gold" title="Toggle Highlight">
+                      <Sparkles className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => duplicateProduct(p)} className="p-2 text-muted-foreground hover:text-gold" title="Duplicate">
+                      <Copy className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => startEdit(p)} className="p-2 text-muted-foreground hover:text-gold" title="Edit">
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDelete(p.id)} className="p-2 text-muted-foreground hover:text-destructive" title="Delete">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </div>
+      </main>
     </div>
   );
-}
+};
+
+export default AdminDashboard;
