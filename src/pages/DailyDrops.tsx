@@ -39,39 +39,39 @@ const DailyDrops = () => {
     fetchProducts();
   }, []);
 
-  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="pt-40 pb-20">
-        <div className="container mx-auto px-6">
+      <main className="pt-28 md:pt-40 pb-12 md:pb-20">
+        <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-12"
+            className="text-center mb-8 md:mb-12"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold/20 rounded-full text-gold mb-4">
-              <Sparkles className="w-4 h-4" />
-              <span className="text-sm font-medium">Fresh Arrivals</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-gold/20 rounded-full text-gold mb-3 md:mb-4">
+              <Sparkles className="w-3 h-3 md:w-4 md:h-4" />
+              <span className="text-xs md:text-sm font-medium">Fresh Arrivals</span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-foreground mb-3 md:mb-4">
               Daily <span className="text-gold-gradient">Drops</span>
             </h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto flex items-center justify-center gap-2">
-              <Clock className="w-4 h-4" />
+            <p className="text-muted-foreground text-xs md:text-base max-w-2xl mx-auto flex items-center justify-center gap-2">
+              <Clock className="w-3 h-3 md:w-4 md:h-4" />
               New products added every day • {today}
             </p>
           </motion.div>
 
           {/* Today's Highlights */}
           {products.some(p => p.is_highlight) && (
-            <div className="mb-16">
-              <h2 className="text-2xl font-serif font-bold text-foreground mb-6 flex items-center gap-2">
-                <span className="w-3 h-3 bg-destructive rounded-full animate-pulse" />
+            <div className="mb-10 md:mb-16">
+              <h2 className="text-lg md:text-2xl font-serif font-bold text-foreground mb-4 md:mb-6 flex items-center gap-2">
+                <span className="w-2 h-2 md:w-3 md:h-3 bg-destructive rounded-full animate-pulse" />
                 Today's Highlight
               </h2>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
                 {products.filter(p => p.is_highlight).map(product => (
                   <ProductCard
                     key={product.id}
@@ -90,17 +90,26 @@ const DailyDrops = () => {
 
           {/* Recent Drops */}
           <div>
-            <h2 className="text-2xl font-serif font-bold text-foreground mb-6">
-              This Week's Drops ({products.length} products)
+            <h2 className="text-lg md:text-2xl font-serif font-bold text-foreground mb-4 md:mb-6">
+              This Week's Drops ({products.length})
             </h2>
             {loading ? (
-              <div className="text-center text-gold">Loading...</div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="card-luxury animate-pulse p-3 md:p-6">
+                    <div className="aspect-[3/4] bg-muted rounded-lg mb-3" />
+                    <div className="h-3 bg-muted rounded w-1/3 mb-2" />
+                    <div className="h-4 bg-muted rounded w-2/3 mb-2" />
+                    <div className="h-4 bg-muted rounded w-1/4" />
+                  </div>
+                ))}
+              </div>
             ) : products.length === 0 ? (
               <div className="text-center text-muted-foreground py-12">
-                <p>No new products this week. Check back soon!</p>
+                <p className="text-sm md:text-base">No new products this week. Check back soon!</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
                 {products.map(product => (
                   <ProductCard
                     key={product.id}
