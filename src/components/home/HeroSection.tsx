@@ -5,7 +5,7 @@ import FloatingDiamonds from '../3d/FloatingDiamonds';
 
 const HeroSection = () => {
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden">
+    <section className="relative min-h-[85vh] md:min-h-screen flex items-center overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0">
         <img
@@ -16,18 +16,20 @@ const HeroSection = () => {
         <div className="absolute inset-0 bg-gradient-hero" />
       </div>
 
-      {/* Floating Elements */}
-      <FloatingDiamonds />
+      {/* Floating Elements - Hidden on mobile for performance */}
+      <div className="hidden md:block">
+        <FloatingDiamonds />
+      </div>
 
       {/* Content */}
-      <div className="container mx-auto px-6 relative z-10 pt-32">
+      <div className="container mx-auto px-4 md:px-6 relative z-10 pt-24 md:pt-32">
         <div className="max-w-2xl">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <span className="inline-block px-4 py-2 bg-gold/20 border border-gold/40 rounded-full text-gold text-sm font-medium mb-6">
+            <span className="inline-block px-3 py-1.5 md:px-4 md:py-2 bg-gold/20 border border-gold/40 rounded-full text-gold text-xs md:text-sm font-medium mb-4 md:mb-6">
               New Collection 2024
             </span>
           </motion.div>
@@ -36,7 +38,7 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="text-5xl md:text-7xl font-serif font-bold leading-tight mb-6"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-serif font-bold leading-tight mb-4 md:mb-6"
           >
             Elegance{' '}
             <span className="text-gold-gradient italic">Redefined</span>
@@ -48,7 +50,7 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.6 }}
-            className="text-lg text-foreground/80 mb-8 max-w-lg"
+            className="text-sm md:text-lg text-foreground/80 mb-6 md:mb-8 max-w-lg"
           >
             Discover the finest selection of luxury dresses, wedding essentials, 
             and premium accessories in Freetown.
@@ -58,36 +60,36 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.8 }}
-            className="flex flex-wrap gap-4"
+            className="flex flex-col sm:flex-row gap-3 md:gap-4"
           >
-            <Link to="/daily-drops" className="btn-gold flex items-center gap-2">
+            <Link to="/daily-drops" className="btn-gold flex items-center justify-center gap-2 text-sm md:text-base py-3 md:py-4">
               Shop Daily Drops
-              <ChevronRight className="w-5 h-5" />
+              <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
             </Link>
-            <Link to="/categories" className="btn-outline-gold">
+            <Link to="/categories" className="btn-outline-gold text-center text-sm md:text-base py-3 md:py-4">
               Explore Collections
             </Link>
           </motion.div>
         </div>
 
-        {/* Stats */}
+        {/* Stats - Repositioned for mobile */}
         <motion.div
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 1 }}
-          className="absolute right-6 bottom-32 bg-card/80 backdrop-blur-xl rounded-2xl p-6 border border-border"
+          className="mt-8 md:mt-0 md:absolute md:right-6 md:bottom-32 bg-card/80 backdrop-blur-xl rounded-xl md:rounded-2xl p-4 md:p-6 border border-border"
         >
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <span className="text-4xl font-bold text-gold">10k+</span>
-              <div className="text-sm text-foreground/60">
+          <div className="flex md:flex-col gap-6 md:gap-4 justify-center">
+            <div className="flex items-center gap-3 md:gap-4">
+              <span className="text-2xl md:text-4xl font-bold text-gold">10k+</span>
+              <div className="text-xs md:text-sm text-foreground/60">
                 <div className="font-medium text-foreground">Satisfied</div>
                 Fashionistas
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="text-4xl font-bold text-gold">24/7</span>
-              <div className="text-sm text-foreground/60">
+            <div className="flex items-center gap-3 md:gap-4">
+              <span className="text-2xl md:text-4xl font-bold text-gold">24/7</span>
+              <div className="text-xs md:text-sm text-foreground/60">
                 <div className="font-medium text-foreground">Live Market</div>
                 Updates
               </div>

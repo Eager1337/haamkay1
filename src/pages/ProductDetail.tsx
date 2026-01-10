@@ -38,7 +38,6 @@ const ProductDetail = () => {
       
       if (data) {
         setProduct(data);
-        // Fetch related products
         const { data: related } = await supabase
           .from('products')
           .select('*')
@@ -56,7 +55,7 @@ const ProductDetail = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="pt-40 flex items-center justify-center">
+        <div className="pt-28 md:pt-40 flex items-center justify-center">
           <div className="text-gold">Loading...</div>
         </div>
       </div>
@@ -67,9 +66,9 @@ const ProductDetail = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="pt-40 container mx-auto px-6 text-center">
-          <h1 className="text-3xl font-serif text-foreground mb-4">Product Not Found</h1>
-          <Link to="/" className="btn-gold inline-block">Back to Home</Link>
+        <div className="pt-28 md:pt-40 container mx-auto px-4 md:px-6 text-center">
+          <h1 className="text-2xl md:text-3xl font-serif text-foreground mb-4">Product Not Found</h1>
+          <Link to="/" className="btn-gold inline-block text-sm md:text-base">Back to Home</Link>
         </div>
         <Footer />
       </div>
@@ -81,17 +80,17 @@ const ProductDetail = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="pt-40 pb-20">
-        <div className="container mx-auto px-6">
+      <main className="pt-28 md:pt-40 pb-12 md:pb-20">
+        <div className="container mx-auto px-4 md:px-6">
           {/* Breadcrumb */}
-          <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-gold mb-8">
-            <ArrowLeft className="w-4 h-4" /> Back to Shop
+          <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-gold mb-4 md:mb-8 text-sm md:text-base">
+            <ArrowLeft className="w-4 h-4" /> Back
           </Link>
 
-          <div className="grid lg:grid-cols-2 gap-12">
+          <div className="grid lg:grid-cols-2 gap-6 md:gap-12">
             {/* Image Gallery */}
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-              <div className="relative aspect-square rounded-2xl overflow-hidden mb-4">
+              <div className="relative aspect-square rounded-xl md:rounded-2xl overflow-hidden mb-3 md:mb-4">
                 <img
                   src={images[currentImageIndex]}
                   alt={product.name}
@@ -101,30 +100,32 @@ const ProductDetail = () => {
                   <>
                     <button
                       onClick={() => setCurrentImageIndex(i => i === 0 ? images.length - 1 : i - 1)}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center text-foreground hover:bg-gold hover:text-teal-darker transition-colors"
+                      className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center text-foreground hover:bg-gold hover:text-teal-darker transition-colors"
                     >
-                      <ChevronLeft className="w-5 h-5" />
+                      <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
                     </button>
                     <button
                       onClick={() => setCurrentImageIndex(i => i === images.length - 1 ? 0 : i + 1)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center text-foreground hover:bg-gold hover:text-teal-darker transition-colors"
+                      className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 rounded-full bg-card/80 backdrop-blur flex items-center justify-center text-foreground hover:bg-gold hover:text-teal-darker transition-colors"
                     >
-                      <ChevronRight className="w-5 h-5" />
+                      <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
                     </button>
                   </>
                 )}
                 {product.featured && (
-                  <span className="absolute top-4 left-4 px-3 py-1 bg-gold text-teal-darker text-sm font-semibold rounded-full flex items-center gap-1">
-                    <Star className="w-4 h-4" /> Featured
+                  <span className="absolute top-3 md:top-4 left-3 md:left-4 px-2 py-0.5 md:px-3 md:py-1 bg-gold text-teal-darker text-xs md:text-sm font-semibold rounded-full flex items-center gap-1">
+                    <Star className="w-3 h-3 md:w-4 md:h-4" /> Featured
                   </span>
                 )}
               </div>
+              
+              {/* Thumbnails */}
               <div className="flex gap-2 overflow-x-auto pb-2">
                 {images.map((img, i) => (
                   <button
                     key={i}
                     onClick={() => setCurrentImageIndex(i)}
-                    className={`w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors ${
+                    className={`w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors ${
                       i === currentImageIndex ? 'border-gold' : 'border-transparent'
                     }`}
                   >
@@ -135,9 +136,9 @@ const ProductDetail = () => {
               
               {/* Videos */}
               {product.videos && product.videos.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="text-lg font-semibold text-foreground mb-3">Product Videos</h3>
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="mt-4 md:mt-6">
+                  <h3 className="text-sm md:text-lg font-semibold text-foreground mb-2 md:mb-3">Product Videos</h3>
+                  <div className="grid grid-cols-2 gap-3 md:gap-4">
                     {product.videos.map((video, i) => (
                       <video key={i} controls className="rounded-lg w-full">
                         <source src={video} type="video/mp4" />
@@ -149,44 +150,44 @@ const ProductDetail = () => {
             </motion.div>
 
             {/* Product Info */}
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4 md:space-y-6">
               <div>
-                <span className="text-gold uppercase tracking-wider text-sm">{product.category}</span>
-                <h1 className="text-4xl font-serif font-bold text-foreground mt-2">{product.name}</h1>
+                <span className="text-gold uppercase tracking-wider text-xs md:text-sm">{product.category}</span>
+                <h1 className="text-2xl md:text-4xl font-serif font-bold text-foreground mt-1 md:mt-2">{product.name}</h1>
               </div>
 
-              <div className="flex items-center gap-4">
-                <span className="text-3xl font-bold text-gold">Le {product.price.toLocaleString()}</span>
+              <div className="flex flex-wrap items-center gap-3 md:gap-4">
+                <span className="text-2xl md:text-3xl font-bold text-gold">Le {product.price.toLocaleString()}</span>
                 <div className="flex items-center gap-1 text-muted-foreground">
-                  <ShieldCheck className="w-5 h-5 text-gold" />
-                  <span className="text-sm">Verified Authentic</span>
+                  <ShieldCheck className="w-4 h-4 md:w-5 md:h-5 text-gold" />
+                  <span className="text-xs md:text-sm">Verified</span>
                 </div>
               </div>
 
-              <p className="text-muted-foreground leading-relaxed">
-                {product.description || 'Experience luxury with this premium product from Haamkay Enterprises. Quality guaranteed.'}
+              <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
+                {product.description || 'Experience luxury with this premium product from Haamkay Enterprises.'}
               </p>
 
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <span className={`px-3 py-1 rounded-full ${product.stock > 0 ? 'bg-green-500/20 text-green-400' : 'bg-destructive/20 text-destructive'}`}>
+              <div className="flex items-center gap-3 text-xs md:text-sm text-muted-foreground">
+                <span className={`px-2 py-1 md:px-3 md:py-1 rounded-full ${product.stock > 0 ? 'bg-green-500/20 text-green-400' : 'bg-destructive/20 text-destructive'}`}>
                   {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
                 </span>
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex gap-3 md:gap-4">
                 <a
                   href={`https://wa.me/23276682626?text=Hi, I'm interested in ${product.name} (Le ${product.price.toLocaleString()})`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-gold flex-1 text-center"
+                  className="btn-gold flex-1 text-center text-sm md:text-base py-3 md:py-4"
                 >
                   Order via WhatsApp
                 </a>
-                <button className="btn-outline-gold px-4">
-                  <Heart className="w-5 h-5" />
+                <button className="btn-outline-gold px-3 md:px-4">
+                  <Heart className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
-                <button className="btn-outline-gold px-4">
-                  <Share2 className="w-5 h-5" />
+                <button className="btn-outline-gold px-3 md:px-4">
+                  <Share2 className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
               </div>
             </motion.div>
@@ -194,21 +195,21 @@ const ProductDetail = () => {
 
           {/* Related Products */}
           {relatedProducts.length > 0 && (
-            <div className="mt-20">
-              <h2 className="text-2xl font-serif font-bold text-foreground mb-8">Related Products</h2>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="mt-12 md:mt-20">
+              <h2 className="text-lg md:text-2xl font-serif font-bold text-foreground mb-4 md:mb-8">Related Products</h2>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
                 {relatedProducts.map(p => (
-                  <Link key={p.id} to={`/product/${p.id}`} className="card-luxury group">
-                    <div className="aspect-square rounded-xl overflow-hidden mb-4">
+                  <Link key={p.id} to={`/product/${p.id}`} className="card-luxury group p-3 md:p-6">
+                    <div className="aspect-square rounded-lg md:rounded-xl overflow-hidden mb-3 md:mb-4">
                       <img
                         src={p.images?.[0] || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400'}
                         alt={p.name}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                     </div>
-                    <span className="text-xs text-gold uppercase">{p.category}</span>
-                    <h3 className="text-foreground font-semibold">{p.name}</h3>
-                    <p className="text-gold font-bold">Le {p.price.toLocaleString()}</p>
+                    <span className="text-[10px] md:text-xs text-gold uppercase">{p.category}</span>
+                    <h3 className="text-foreground font-semibold text-sm md:text-base line-clamp-1">{p.name}</h3>
+                    <p className="text-gold font-bold text-sm md:text-base">Le {p.price.toLocaleString()}</p>
                   </Link>
                 ))}
               </div>

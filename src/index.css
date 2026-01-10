@@ -109,8 +109,6 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', sans-serif;
-    min-width: 1200px;
-    overflow-x: auto;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -272,4 +270,14 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--gold));
+}
+
+/* Hide scrollbar for category filters on mobile */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
