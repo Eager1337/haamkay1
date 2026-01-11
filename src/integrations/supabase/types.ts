@@ -35,6 +35,41 @@ export type Database = {
         }
         Relationships: []
       }
+      cart_items: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          quantity: number
+          updated_at: string
+          user_phone: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          quantity?: number
+          updated_at?: string
+          user_phone: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          quantity?: number
+          updated_at?: string
+          user_phone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string
@@ -71,6 +106,33 @@ export type Database = {
           count?: number
           id?: string
           upload_date?: string
+        }
+        Relationships: []
+      }
+      phone_verifications: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          otp_code: string
+          phone_number: string
+          verified: boolean
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          otp_code: string
+          phone_number: string
+          verified?: boolean
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          otp_code?: string
+          phone_number?: string
+          verified?: boolean
         }
         Relationships: []
       }
@@ -116,6 +178,36 @@ export type Database = {
           stock?: number
           updated_at?: string
           videos?: string[] | null
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          created_at: string
+          display_name: string
+          how_found_us: string | null
+          id: string
+          phone_number: string
+          shopping_interests: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          how_found_us?: string | null
+          id?: string
+          phone_number: string
+          shopping_interests?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          how_found_us?: string | null
+          id?: string
+          phone_number?: string
+          shopping_interests?: string[] | null
+          updated_at?: string
         }
         Relationships: []
       }
