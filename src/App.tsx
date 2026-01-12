@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { UserProvider, useUser } from "./contexts/UserContext";
 import { CartProvider } from "./contexts/CartContext";
+import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import Index from "./pages/Index";
 import Onboarding from "./pages/Onboarding";
 import Cart from "./pages/Cart";
@@ -84,11 +85,13 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <UserProvider>
-          <CartProvider>
-            <AppRoutes />
-          </CartProvider>
-        </UserProvider>
+        <AdminAuthProvider>
+          <UserProvider>
+            <CartProvider>
+              <AppRoutes />
+            </CartProvider>
+          </UserProvider>
+        </AdminAuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
