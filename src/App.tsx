@@ -8,6 +8,8 @@ import { CartProvider } from "./contexts/CartContext";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import Index from "./pages/Index";
 import Onboarding from "./pages/Onboarding";
+import Login from "./pages/Login";
+import Profile from "./pages/Profile";
 import Cart from "./pages/Cart";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -44,10 +46,11 @@ const AppRoutes = () => {
     );
   }
 
-  // Show onboarding for new users (except admin routes)
+  // Show onboarding for new users (except admin routes, login, and signup)
   const isAdminRoute = window.location.pathname.startsWith('/admin');
+  const isAuthRoute = window.location.pathname === '/login' || window.location.pathname === '/signup';
   
-  if (!isOnboarded && !isAdminRoute) {
+  if (!isOnboarded && !isAdminRoute && !isAuthRoute) {
     return <Onboarding />;
   }
 
@@ -55,6 +58,9 @@ const AppRoutes = () => {
     <Routes>
       {/* Public Pages */}
       <Route path="/" element={<Index />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Onboarding />} />
+      <Route path="/profile" element={<Profile />} />
       <Route path="/product/:id" element={<ProductDetail />} />
       <Route path="/categories" element={<Categories />} />
       <Route path="/daily-drops" element={<DailyDrops />} />

@@ -7,13 +7,16 @@ interface UserProfile {
   display_name: string;
   how_found_us: string | null;
   shopping_interests: string[] | null;
+  avatar_url: string | null;
 }
 
 interface UserContextType {
   user: UserProfile | null;
   isLoading: boolean;
   isOnboarded: boolean;
+  isGuest: boolean;
   setUser: (user: UserProfile | null) => void;
+  setIsGuest: (isGuest: boolean) => void;
   logout: () => void;
 }
 
@@ -22,12 +25,18 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isGuest, setIsGuestState] = useState(false);
 
   useEffect(() => {
-    // Check localStorage for existing user
+    // Check localStorage for existing user or guest status
     const storedPhone = localStorage.getItem('haamkay_user_phone');
+    const guestStatus = localStorage.getItem('haamkay_is_guest');
+    
     if (storedPhone) {
       fetchUserProfile(storedPhone);
+    } else if (guestStatus === 'true') {
+      setIsGuestState(true);
+      setIsLoading(false);
     } else {
       setIsLoading(false);
     }
@@ -42,7 +51,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         .maybeSingle();
 
       if (data && !error) {
-        setUser(data);
+        setUser(data as UserProfile);
       } else {
         localStorage.removeItem('haamkay_user_phone');
       }
@@ -53,17 +62,30 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const setIsGuest = (guest: boolean) => {
+    setIsGuestState(guest);
+    if (guest) {
+      localStorage.setItem('haamkay_is_guest', 'true');
+    } else {
+      localStorage.removeItem('haamkay_is_guest');
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('haamkay_user_phone');
+    localStorage.removeItem('haamkay_is_guest');
     setUser(null);
+    setIsGuestState(false);
   };
 
   return (
     <UserContext.Provider value={{
       user,
       isLoading,
-      isOnboarded: !!user,
-      setUser,
+      isOnboarded: !!user || isGuest,
+      isGuest,
+      setUser: (userData) => setUser(userData as UserProfile | null),
+      setIsGuest,
       logout
     }}>
       {children}
