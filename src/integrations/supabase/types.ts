@@ -183,28 +183,34 @@ export type Database = {
       }
       user_profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
           display_name: string
           how_found_us: string | null
           id: string
+          password_hash: string | null
           phone_number: string
           shopping_interests: string[] | null
           updated_at: string
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
           display_name: string
           how_found_us?: string | null
           id?: string
+          password_hash?: string | null
           phone_number: string
           shopping_interests?: string[] | null
           updated_at?: string
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
           display_name?: string
           how_found_us?: string | null
           id?: string
+          password_hash?: string | null
           phone_number?: string
           shopping_interests?: string[] | null
           updated_at?: string
@@ -243,6 +249,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      verify_user_password: {
+        Args: { p_password: string; p_phone: string }
+        Returns: string
       }
     }
     Enums: {

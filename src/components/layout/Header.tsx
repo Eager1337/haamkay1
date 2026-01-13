@@ -107,12 +107,10 @@ const Header = () => {
               </Link>
 
               {/* User greeting - Desktop */}
-              {user && (
-                <div className="hidden md:flex items-center gap-2 text-sm text-foreground/80">
-                  <User className="w-4 h-4" />
-                  <span>Hi, {user.display_name.split(' ')[0]}</span>
-                </div>
-              )}
+              <Link to={user ? "/profile" : "/login"} className="hidden md:flex items-center gap-2 text-sm text-foreground/80 hover:text-gold transition-colors">
+                <User className="w-4 h-4" />
+                <span>{user ? `Hi, ${user.display_name.split(' ')[0]}` : 'Sign In'}</span>
+              </Link>
             </div>
           </div>
         </div>
@@ -129,17 +127,19 @@ const Header = () => {
           >
             <nav className="container mx-auto px-4 py-4">
               {/* User greeting - Mobile */}
-              {user && (
-                <div className="flex items-center gap-3 px-4 py-3 mb-2 bg-muted rounded-lg">
-                  <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center">
-                    <User className="w-5 h-5 text-gold" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Hi, {user.display_name}!</p>
-                    <p className="text-xs text-muted-foreground">{user.phone_number}</p>
-                  </div>
+              <Link
+                to={user ? "/profile" : "/login"}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 mb-2 bg-muted rounded-lg hover:bg-gold/10 transition-colors"
+              >
+                <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center">
+                  <User className="w-5 h-5 text-gold" />
                 </div>
-              )}
+                <div>
+                  <p className="font-medium">{user ? `Hi, ${user.display_name}!` : 'Sign In / Create Account'}</p>
+                  <p className="text-xs text-muted-foreground">{user?.phone_number || 'Tap to get started'}</p>
+                </div>
+              </Link>
 
               <div className="flex flex-col gap-1">
                 {navLinks.map((link) => (
