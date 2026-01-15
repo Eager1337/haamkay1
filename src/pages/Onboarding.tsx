@@ -37,7 +37,6 @@ const Onboarding = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [otpCode, setOtpCode] = useState('');
-  const [generatedOtp, setGeneratedOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
 
@@ -48,7 +47,6 @@ const Onboarding = () => {
   };
 
   const handleSkip = () => {
-    // Set as guest user and redirect to main site
     setIsGuest(true);
     toast.success('Welcome to Haamkay! 🎉', { description: 'You can create a profile anytime from the menu.' });
   };
@@ -63,7 +61,6 @@ const Onboarding = () => {
     
     // Generate a 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    setGeneratedOtp(otp);
     
     try {
       // Store OTP in database
@@ -81,9 +78,9 @@ const Onboarding = () => {
       if (error) throw error;
 
       setOtpSent(true);
-      // For demo purposes - in production, integrate with SMS provider
-      toast.success(`Verification code sent! Check your phone.`, { 
-        description: `Demo code: ${otp}`,
+      // For demo - in production, send via SMS
+      toast.success(`Verification code sent!`, { 
+        description: `Demo: ${otp}`,
         duration: 15000 
       });
     } catch (error) {
@@ -95,8 +92,8 @@ const Onboarding = () => {
   };
 
   const verifyAndComplete = async () => {
-    if (otpCode !== generatedOtp) {
-      toast.error('Invalid verification code');
+    if (otpCode.length !== 6) {
+      toast.error('Please enter the 6-digit code');
       return;
     }
 
@@ -108,6 +105,21 @@ const Onboarding = () => {
     setIsLoading(true);
     
     try {
+      // Verify OTP using server-side function
+      const { data: isValid, error: verifyError } = await supabase
+        .rpc('verify_otp', {
+          p_phone: phoneNumber,
+          p_otp: otpCode
+        });
+
+      if (verifyError) throw verifyError;
+
+      if (!isValid) {
+        toast.error('Invalid or expired verification code');
+        setIsLoading(false);
+        return;
+      }
+
       // Create user profile with password
       const { data, error } = await supabase
         .from('user_profiles')
@@ -123,13 +135,6 @@ const Onboarding = () => {
 
       if (error) throw error;
 
-      // Mark OTP as verified
-      await supabase
-        .from('phone_verifications')
-        .update({ verified: true })
-        .eq('phone_number', phoneNumber)
-        .eq('otp_code', otpCode);
-
       // Save to localStorage and context
       localStorage.setItem('haamkay_user_phone', phoneNumber);
       setUser(data);
@@ -140,7 +145,7 @@ const Onboarding = () => {
       if (error.code === '23505') {
         toast.error('This phone number is already registered. Try logging in instead.');
       } else {
-        toast.error('Failed to complete signup');
+        toast.error('Failed to complete signup. Please try again.');
       }
     } finally {
       setIsLoading(false);
