@@ -14,27 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      admin_users: {
-        Row: {
-          created_at: string
-          id: string
-          password_hash: string
-          username: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          password_hash: string
-          username: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          password_hash?: string
-          username?: string
-        }
-        Relationships: []
-      }
       cart_items: {
         Row: {
           created_at: string
@@ -240,9 +219,42 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      user_profiles_public: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          display_name: string | null
+          how_found_us: string | null
+          id: string | null
+          phone_number: string | null
+          shopping_interests: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          how_found_us?: string | null
+          id?: string | null
+          phone_number?: string | null
+          shopping_interests?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          how_found_us?: string | null
+          id?: string | null
+          phone_number?: string | null
+          shopping_interests?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      check_phone_exists: { Args: { p_phone: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -250,6 +262,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      verify_otp: { Args: { p_otp: string; p_phone: string }; Returns: boolean }
       verify_user_password: {
         Args: { p_password: string; p_phone: string }
         Returns: string
