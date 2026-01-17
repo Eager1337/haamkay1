@@ -1,9 +1,7 @@
 import { motion } from 'framer-motion';
-import { ShieldCheck, Star, Heart, ShoppingBag } from 'lucide-react';
+import { ShieldCheck, Star, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
-import { useUser } from '@/contexts/UserContext';
-import { toast } from 'sonner';
 
 interface ProductCardProps {
   id: string;
@@ -25,18 +23,18 @@ const ProductCard = ({
   isHighlight 
 }: ProductCardProps) => {
   const { addToCart } = useCart();
-  const { user } = useUser();
 
-  const handleAddToCart = async (e: React.MouseEvent) => {
+  const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    if (!user) {
-      toast.error('Please complete onboarding to add items to cart');
-      return;
-    }
-    
-    await addToCart(id);
+    addToCart(id, 1, {
+      id,
+      name,
+      price,
+      images: image ? [image] : null,
+      category
+    });
   };
 
   return (

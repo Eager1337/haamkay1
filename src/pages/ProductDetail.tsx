@@ -4,11 +4,9 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Star, ShieldCheck, Heart, Share2, ChevronLeft, ChevronRight, ShoppingBag, Minus, Plus, MessageCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCart } from '@/contexts/CartContext';
-import { useUser } from '@/contexts/UserContext';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ProductCard from '@/components/home/ProductCard';
-import { toast } from 'sonner';
 
 interface Product {
   id: string;
@@ -26,7 +24,6 @@ interface Product {
 const ProductDetail = () => {
   const { id } = useParams();
   const { addToCart } = useCart();
-  const { user } = useUser();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -60,14 +57,16 @@ const ProductDetail = () => {
     setQuantity(1);
   }, [id]);
 
-  const handleAddToCart = async () => {
-    if (!user) {
-      toast.error('Please complete onboarding first');
-      return;
-    }
+  const handleAddToCart = () => {
     if (!product) return;
     
-    await addToCart(product.id, quantity);
+    addToCart(product.id, quantity, {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      images: product.images,
+      category: product.category
+    });
   };
 
   const handleWhatsAppOrder = () => {

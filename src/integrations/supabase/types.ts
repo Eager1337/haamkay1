@@ -219,39 +219,7 @@ export type Database = {
       }
     }
     Views: {
-      user_profiles_public: {
-        Row: {
-          avatar_url: string | null
-          created_at: string | null
-          display_name: string | null
-          how_found_us: string | null
-          id: string | null
-          phone_number: string | null
-          shopping_interests: string[] | null
-          updated_at: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string | null
-          display_name?: string | null
-          how_found_us?: string | null
-          id?: string | null
-          phone_number?: string | null
-          shopping_interests?: string[] | null
-          updated_at?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string | null
-          display_name?: string | null
-          how_found_us?: string | null
-          id?: string | null
-          phone_number?: string | null
-          shopping_interests?: string[] | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       check_phone_exists: { Args: { p_phone: string }; Returns: boolean }

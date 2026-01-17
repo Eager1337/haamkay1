@@ -2,22 +2,18 @@ import { motion } from 'framer-motion';
 import { ShoppingBag, Minus, Plus, Trash2, ArrowLeft, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
-import { useUser } from '@/contexts/UserContext';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 
 const Cart = () => {
-  const { items, removeFromCart, updateQuantity, totalPrice, isLoading } = useCart();
-  const { user } = useUser();
+  const { items, removeFromCart, updateQuantity, totalPrice } = useCart();
 
   const handleWhatsAppCheckout = () => {
-    if (!user) return;
-    
     const itemsList = items
       .map(item => `• ${item.product?.name} x${item.quantity} - Le ${((item.product?.price || 0) * item.quantity).toLocaleString()}`)
       .join('\n');
     
-    const message = `🛒 *Order from Haamkay*\n\nCustomer: ${user.display_name}\nPhone: ${user.phone_number}\n\n*Items:*\n${itemsList}\n\n*Total: Le ${totalPrice.toLocaleString()}*`;
+    const message = `🛒 *Order from Haamkay*\n\n*Items:*\n${itemsList}\n\n*Total: Le ${totalPrice.toLocaleString()}*\n\nPlease confirm my order!`;
     
     window.open(`https://wa.me/23276682626?text=${encodeURIComponent(message)}`, '_blank');
   };
@@ -89,7 +85,7 @@ const Cart = () => {
                         {item.product?.category}
                       </p>
                       <p className="text-lg font-bold text-gold">
-                        Le {item.product?.price.toLocaleString()}
+                        Le {item.product?.price?.toLocaleString()}
                       </p>
                       
                       <div className="flex items-center justify-between mt-3">
