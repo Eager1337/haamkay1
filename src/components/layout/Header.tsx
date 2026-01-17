@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, Phone, ShoppingBag, Menu, X, User } from 'lucide-react';
+import { Search, Phone, ShoppingBag, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/contexts/CartContext';
-import { useUser } from '@/contexts/UserContext';
 
 const navLinks = [
   { name: 'Home', path: '/' },
@@ -17,7 +16,6 @@ const navLinks = [
 const Header = () => {
   const location = useLocation();
   const { totalItems } = useCart();
-  const { user } = useUser();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -105,12 +103,6 @@ const Header = () => {
                   {totalItems}
                 </span>
               </Link>
-
-              {/* User greeting - Desktop */}
-              <Link to={user ? "/profile" : "/login"} className="hidden md:flex items-center gap-2 text-sm text-foreground/80 hover:text-gold transition-colors">
-                <User className="w-4 h-4" />
-                <span>{user ? `Hi, ${user.display_name.split(' ')[0]}` : 'Sign In'}</span>
-              </Link>
             </div>
           </div>
         </div>
@@ -126,21 +118,6 @@ const Header = () => {
             className="lg:hidden bg-card border-b border-border overflow-hidden"
           >
             <nav className="container mx-auto px-4 py-4">
-              {/* User greeting - Mobile */}
-              <Link
-                to={user ? "/profile" : "/login"}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 mb-2 bg-muted rounded-lg hover:bg-gold/10 transition-colors"
-              >
-                <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center">
-                  <User className="w-5 h-5 text-gold" />
-                </div>
-                <div>
-                  <p className="font-medium">{user ? `Hi, ${user.display_name}!` : 'Sign In / Create Account'}</p>
-                  <p className="text-xs text-muted-foreground">{user?.phone_number || 'Tap to get started'}</p>
-                </div>
-              </Link>
-
               <div className="flex flex-col gap-1">
                 {navLinks.map((link) => (
                   <Link
