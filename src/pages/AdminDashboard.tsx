@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { productSchema, validateForm } from '@/lib/validations';
+import { validateMediaFile } from '@/lib/fileValidation';
 
 interface Product {
   id: string;
@@ -62,15 +63,17 @@ const AdminDashboard = () => {
     const urls: string[] = [];
     
     for (const file of Array.from(files)) {
-      // Validate file size (10MB max)
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error(`File ${file.name} is too large. Max size is 10MB.`);
+      const validation = validateMediaFile(file, type);
+      if (!validation.valid) {
+        toast.error(validation.error);
         continue;
       }
       
-      const ext = file.name.split('.').pop();
+      const ext = file.name.split('.').pop()?.toLowerCase();
       const path = `${type}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error } = await supabase.storage.from('product-media').upload(path, file);
+      const { error } = await supabase.storage.from('product-media').upload(path, file, {
+        contentType: file.type,
+      });
       if (!error) {
         const { data } = supabase.storage.from('product-media').getPublicUrl(path);
         urls.push(data.publicUrl);
