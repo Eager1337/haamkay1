@@ -98,39 +98,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_profiles: {
-        Row: {
-          avatar_url: string | null
-          created_at: string
-          display_name: string
-          how_found_us: string | null
-          id: string
-          phone_number: string
-          shopping_interests: string[] | null
-          updated_at: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string
-          display_name: string
-          how_found_us?: string | null
-          id?: string
-          phone_number: string
-          shopping_interests?: string[] | null
-          updated_at?: string
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string
-          display_name?: string
-          how_found_us?: string | null
-          id?: string
-          phone_number?: string
-          shopping_interests?: string[] | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
       user_roles: {
         Row: {
           created_at: string
