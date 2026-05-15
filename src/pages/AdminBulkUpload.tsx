@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { productSchema, validateForm } from '@/lib/validations';
+import { validateMediaFile } from '@/lib/fileValidation';
 
 interface BulkProduct {
   id: string;
@@ -40,11 +41,9 @@ const AdminBulkUpload = () => {
     const newProducts: BulkProduct[] = [];
     
     for (const file of Array.from(files)) {
-      if (!file.type.startsWith('image/')) continue;
-      
-      // Validate file size (10MB max)
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error(`File ${file.name} is too large. Max size is 10MB.`);
+      const validation = validateMediaFile(file, 'images');
+      if (!validation.valid) {
+        toast.error(validation.error);
         continue;
       }
       
@@ -53,9 +52,11 @@ const AdminBulkUpload = () => {
       const name = baseName.charAt(0).toUpperCase() + baseName.slice(1);
       
       // Upload file first
-      const ext = file.name.split('.').pop();
+      const ext = file.name.split('.').pop()?.toLowerCase();
       const path = `images/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error } = await supabase.storage.from('product-media').upload(path, file);
+      const { error } = await supabase.storage.from('product-media').upload(path, file, {
+        contentType: file.type,
+      });
       
       if (!error) {
         const { data } = supabase.storage.from('product-media').getPublicUrl(path);
