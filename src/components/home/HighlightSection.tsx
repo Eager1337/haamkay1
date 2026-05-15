@@ -19,25 +19,6 @@ const HighlightSection = () => {
 
   useEffect(() => {
     fetchHighlight();
-
-    const channel = supabase
-      .channel('highlight-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'products',
-        },
-        () => {
-          fetchHighlight();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
 
   const fetchHighlight = async () => {
