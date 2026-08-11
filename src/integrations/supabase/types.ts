@@ -53,6 +53,77 @@ export type Database = {
         }
         Relationships: []
       }
+      media_assets: {
+        Row: {
+          created_at: string
+          file_name: string | null
+          id: string
+          media_type: string
+          path: string
+          size_bytes: number | null
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          file_name?: string | null
+          id?: string
+          media_type?: string
+          path: string
+          size_bytes?: number | null
+          url: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string | null
+          id?: string
+          media_type?: string
+          path?: string
+          size_bytes?: number | null
+          url?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          link: string | null
+          product_id: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          link?: string | null
+          product_id?: string | null
+          title: string
+          type?: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          link?: string | null
+          product_id?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category: string
@@ -62,8 +133,10 @@ export type Database = {
           id: string
           images: string[] | null
           is_highlight: boolean
+          low_stock_threshold: number
           name: string
           price: number
+          published: boolean
           stock: number
           updated_at: string
           videos: string[] | null
@@ -76,8 +149,10 @@ export type Database = {
           id?: string
           images?: string[] | null
           is_highlight?: boolean
+          low_stock_threshold?: number
           name: string
           price?: number
+          published?: boolean
           stock?: number
           updated_at?: string
           videos?: string[] | null
@@ -90,13 +165,86 @@ export type Database = {
           id?: string
           images?: string[] | null
           is_highlight?: boolean
+          low_stock_threshold?: number
           name?: string
           price?: number
+          published?: boolean
           stock?: number
           updated_at?: string
           videos?: string[] | null
         }
         Relationships: []
+      }
+      push_subscribers: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          user_agent: string | null
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          user_agent?: string | null
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+      scheduled_changes: {
+        Row: {
+          applied: boolean
+          change_type: string
+          created_at: string
+          id: string
+          new_price: number | null
+          note: string | null
+          product_id: string | null
+          release_at: string
+          updated_at: string
+        }
+        Insert: {
+          applied?: boolean
+          change_type?: string
+          created_at?: string
+          id?: string
+          new_price?: number | null
+          note?: string | null
+          product_id?: string | null
+          release_at: string
+          updated_at?: string
+        }
+        Update: {
+          applied?: boolean
+          change_type?: string
+          created_at?: string
+          id?: string
+          new_price?: number | null
+          note?: string | null
+          product_id?: string | null
+          release_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_changes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
