@@ -3,6 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { Search, Phone, ShoppingBag, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/contexts/CartContext';
+import NotificationBell from '@/components/NotificationBell';
+
 
 const navLinks = [
   { name: 'Home', path: '/' },
@@ -88,6 +90,9 @@ const Header = () => {
               >
                 <Search className="w-5 h-5" />
               </button>
+
+              <NotificationBell />
+
               
               <a
                 href="tel:+23276682626"
