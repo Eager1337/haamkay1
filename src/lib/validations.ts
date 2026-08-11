@@ -39,17 +39,20 @@ export const categorySchema = z.object({
 
 export type CategoryFormData = z.infer<typeof categorySchema>;
 
-// Admin login validation schema
+// Admin login validation schema (username based)
 export const adminLoginSchema = z.object({
-  email: z.string()
-    .email('Please enter a valid email address')
-    .max(255, 'Email must be less than 255 characters'),
+  username: z.string()
+    .trim()
+    .min(3, 'Username must be at least 3 characters')
+    .max(64, 'Username must be less than 64 characters')
+    .regex(/^[a-zA-Z0-9._-]+$/, 'Username can only contain letters, numbers, dots, dashes and underscores'),
   password: z.string()
     .min(6, 'Password must be at least 6 characters')
     .max(72, 'Password must be less than 72 characters'),
 });
 
 export type AdminLoginFormData = z.infer<typeof adminLoginSchema>;
+
 
 // Phone validation
 export const phoneSchema = z.object({

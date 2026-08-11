@@ -1,20 +1,40 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { 
+import {
   LayoutDashboard, FolderOpen, ShoppingCart, BarChart3, Settings, Users,
-  Package, LogOut, Layers
+  Package, LogOut, Layers, Sparkles, Bell, Images, CalendarClock, Boxes, Menu, X
 } from 'lucide-react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
-const navItems = [
-  { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
-  { name: 'Products', path: '/admin/products', icon: Package },
-  { name: 'Categories', path: '/admin/categories', icon: FolderOpen },
-  { name: 'Bulk Upload', path: '/admin/bulk-upload', icon: Layers },
-  { name: 'Orders', path: '/admin/orders', icon: ShoppingCart },
-  { name: 'Analytics', path: '/admin/analytics', icon: BarChart3 },
-  { name: 'Customers', path: '/admin/customers', icon: Users },
-  { name: 'Settings', path: '/admin/settings', icon: Settings },
+const navGroups = [
+  {
+    label: 'Catalog',
+    items: [
+      { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
+      { name: 'Products', path: '/admin/products', icon: Package },
+      { name: 'Categories', path: '/admin/categories', icon: FolderOpen },
+      { name: 'Inventory', path: '/admin/inventory', icon: Boxes },
+    ],
+  },
+  {
+    label: 'Content',
+    items: [
+      { name: 'AI Listing', path: '/admin/ai-listing', icon: Sparkles },
+      { name: 'Bulk Upload', path: '/admin/bulk-upload', icon: Layers },
+      { name: 'Media Library', path: '/admin/media', icon: Images },
+      { name: 'Drops & Prices', path: '/admin/schedule', icon: CalendarClock },
+    ],
+  },
+  {
+    label: 'Engage',
+    items: [
+      { name: 'Notifications', path: '/admin/notifications', icon: Bell },
+      { name: 'Orders', path: '/admin/orders', icon: ShoppingCart },
+      { name: 'Customers', path: '/admin/customers', icon: Users },
+      { name: 'Analytics', path: '/admin/analytics', icon: BarChart3 },
+      { name: 'Settings', path: '/admin/settings', icon: Settings },
+    ],
+  },
 ];
 
 interface AdminLayoutProps {
@@ -28,12 +48,17 @@ export const AdminLayout = ({ children, title, subtitle, actions }: AdminLayoutP
   const navigate = useNavigate();
   const location = useLocation();
   const { isAdmin, isLoading, signOut } = useAdminAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isAdmin) {
       navigate('/admin');
     }
   }, [isAdmin, isLoading, navigate]);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     await signOut();
@@ -48,50 +73,80 @@ export const AdminLayout = ({ children, title, subtitle, actions }: AdminLayoutP
     );
   }
 
-  if (!isAdmin) {
-    return null;
-  }
+  if (!isAdmin) return null;
+
+  const sidebar = (
+    <div className="h-full flex flex-col p-5">
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-lg font-serif font-bold text-gold">Haamkay Admin</h1>
+        <button className="lg:hidden text-muted-foreground" onClick={() => setMenuOpen(false)} aria-label="Close menu">
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+      <nav className="flex-1 space-y-5 overflow-y-auto">
+        {navGroups.map(group => (
+          <div key={group.label}>
+            <p className="px-3 mb-2 text-[11px] uppercase tracking-widest text-muted-foreground">{group.label}</p>
+            <div className="space-y-1">
+              {group.items.map(item => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                    location.pathname === item.path
+                      ? 'bg-gold/20 text-gold'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
+                >
+                  <item.icon className="w-4 h-4 flex-shrink-0" />
+                  {item.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+        ))}
+      </nav>
+      <button
+        onClick={handleLogout}
+        className="mt-4 flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-destructive/20 hover:text-destructive transition-colors"
+      >
+        <LogOut className="w-4 h-4" />
+        Logout
+      </button>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-card border-r border-border p-6 flex flex-col">
-        <div className="mb-8">
-          <h1 className="text-xl font-serif font-bold text-gold">Haamkay Admin</h1>
-        </div>
-        <nav className="flex-1 space-y-2">
-          {navItems.map(item => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                location.pathname === item.path
-                  ? 'bg-gold/20 text-gold'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-              }`}
-            >
-              <item.icon className="w-5 h-5" />
-              {item.name}
-            </Link>
-          ))}
-        </nav>
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-destructive/20 hover:text-destructive transition-colors"
-        >
-          <LogOut className="w-5 h-5" />
-          Logout
-        </button>
+    <div className="min-h-screen bg-background lg:flex">
+      {/* Desktop sidebar */}
+      <aside className="hidden lg:block w-64 flex-shrink-0 bg-card border-r border-border h-screen sticky top-0">
+        {sidebar}
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 p-8 overflow-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-serif font-bold text-foreground">{title}</h1>
-            {subtitle && <p className="text-muted-foreground">{subtitle}</p>}
+      {/* Mobile drawer */}
+      {menuOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 flex">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setMenuOpen(false)} />
+          <aside className="relative w-72 max-w-[85vw] bg-card border-r border-border h-full">{sidebar}</aside>
+        </div>
+      )}
+
+      <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8">
+        <div className="flex items-start justify-between gap-3 mb-6 lg:mb-8">
+          <div className="flex items-start gap-3 min-w-0">
+            <button
+              className="lg:hidden p-2 -ml-2 text-foreground"
+              onClick={() => setMenuOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-foreground truncate">{title}</h1>
+              {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+            </div>
           </div>
-          {actions && <div className="flex gap-3">{actions}</div>}
+          {actions && <div className="flex flex-wrap gap-2 sm:gap-3 justify-end">{actions}</div>}
         </div>
         {children}
       </main>
