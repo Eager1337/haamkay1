@@ -10,6 +10,8 @@ import { toast } from 'sonner';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { productSchema, validateForm } from '@/lib/validations';
 import { validateMediaFile } from '@/lib/fileValidation';
+import { broadcastNotification } from '@/lib/notify';
+
 
 interface Product {
   id: string;
@@ -125,14 +127,35 @@ const AdminDashboard = () => {
         return;
       }
       toast.success('Product updated!');
+
+      if (Number(editingProduct.price) !== productData.price) {
+        await broadcastNotification({
+          type: 'price_change',
+          title: `Price update: ${productData.name}`,
+          body: `Now Le ${productData.price.toLocaleString()} (was Le ${Number(editingProduct.price).toLocaleString()})`,
+          imageUrl: productData.images?.[0] ?? null,
+          link: `/product/${editingProduct.id}`,
+          productId: editingProduct.id,
+        });
+      }
     } else {
-      const { error } = await supabase.from('products').insert(productData);
+      const { data: created, error } = await supabase.from('products').insert(productData).select('id').single();
       if (error) {
         toast.error(`Failed to add: ${error.message}`);
         return;
       }
       toast.success('Product added!');
+
+      await broadcastNotification({
+        type: 'new_product',
+        title: `New arrival: ${productData.name}`,
+        body: `${productData.category} · Le ${productData.price.toLocaleString()}`,
+        imageUrl: productData.images?.[0] ?? null,
+        link: created ? `/product/${created.id}` : '/',
+        productId: created?.id ?? null,
+      });
     }
+
     resetForm();
     fetchData();
   };

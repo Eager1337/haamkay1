@@ -18,6 +18,12 @@ import AdminAnalytics from "./pages/AdminAnalytics";
 import AdminCustomers from "./pages/AdminCustomers";
 import AdminSettings from "./pages/AdminSettings";
 import AdminProducts from "./pages/AdminProducts";
+import AdminAIListing from "./pages/AdminAIListing";
+import AdminInventory from "./pages/AdminInventory";
+import AdminNotifications from "./pages/AdminNotifications";
+import AdminMedia from "./pages/AdminMedia";
+import AdminSchedule from "./pages/AdminSchedule";
+
 import ProductDetail from "./pages/ProductDetail";
 import Categories from "./pages/Categories";
 import DailyDrops from "./pages/DailyDrops";
@@ -53,6 +59,12 @@ const App = () => (
                 <Route path="/admin" element={<AdminLogin />} />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/products" element={<AdminProducts />} />
+                <Route path="/admin/ai-listing" element={<AdminAIListing />} />
+                <Route path="/admin/inventory" element={<AdminInventory />} />
+                <Route path="/admin/notifications" element={<AdminNotifications />} />
+                <Route path="/admin/media" element={<AdminMedia />} />
+                <Route path="/admin/schedule" element={<AdminSchedule />} />
+
                 <Route path="/admin/categories" element={<AdminCategories />} />
                 <Route path="/admin/bulk-upload" element={<AdminBulkUpload />} />
                 <Route path="/admin/orders" element={<AdminOrders />} />
