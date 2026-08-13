@@ -14,6 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_drafts: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          error: string | null
+          id: string
+          images: string[]
+          name: string | null
+          price: number
+          published_product_id: string | null
+          status: string
+          stock: number
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          error?: string | null
+          id?: string
+          images?: string[]
+          name?: string | null
+          price?: number
+          published_product_id?: string | null
+          status?: string
+          stock?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          error?: string | null
+          id?: string
+          images?: string[]
+          name?: string | null
+          price?: number
+          published_product_id?: string | null
+          status?: string
+          stock?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_drafts_published_product_id_fkey"
+            columns: ["published_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string
@@ -124,6 +177,41 @@ export type Database = {
           },
         ]
       }
+      price_history: {
+        Row: {
+          changed_at: string
+          id: string
+          new_price: number
+          note: string | null
+          old_price: number | null
+          product_id: string
+        }
+        Insert: {
+          changed_at?: string
+          id?: string
+          new_price: number
+          note?: string | null
+          old_price?: number | null
+          product_id: string
+        }
+        Update: {
+          changed_at?: string
+          id?: string
+          new_price?: number
+          note?: string | null
+          old_price?: number | null
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_history_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category: string
@@ -138,6 +226,7 @@ export type Database = {
           price: number
           published: boolean
           stock: number
+          tiktok_url: string | null
           updated_at: string
           videos: string[] | null
         }
@@ -154,6 +243,7 @@ export type Database = {
           price?: number
           published?: boolean
           stock?: number
+          tiktok_url?: string | null
           updated_at?: string
           videos?: string[] | null
         }
@@ -170,6 +260,7 @@ export type Database = {
           price?: number
           published?: boolean
           stock?: number
+          tiktok_url?: string | null
           updated_at?: string
           videos?: string[] | null
         }
@@ -245,6 +336,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      site_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
