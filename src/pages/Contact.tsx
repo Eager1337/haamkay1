@@ -50,7 +50,7 @@ const Contact = () => {
           <motion.a
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            href="https://wa.me/23276682626?text=Hi, I have a question about your products"
+            href="https://wa.me/23276682626?text=Hi%2C%20I%20have%20a%20question%20about%20your%20products"
             target="_blank"
             rel="noopener noreferrer"
             className="block mb-6 md:hidden card-luxury bg-green-500/10 border border-green-500/30 hover:bg-green-500/20 transition-colors p-4"
@@ -165,7 +165,7 @@ const Contact = () => {
 
               {/* Quick WhatsApp - Desktop */}
               <a
-                href="https://wa.me/23276682626?text=Hi, I have a question about your products"
+                href="https://wa.me/23276682626?text=Hi%2C%20I%20have%20a%20question%20about%20your%20products"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hidden md:block card-luxury bg-green-500/10 border border-green-500/30 hover:bg-green-500/20 transition-colors"

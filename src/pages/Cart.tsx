@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { openWhatsApp } from '@/lib/whatsapp';
 
 const Cart = () => {
   const { items, removeFromCart, updateQuantity, totalPrice } = useCart();
@@ -15,7 +16,7 @@ const Cart = () => {
     
     const message = `🛒 *Order from Haamkay*\n\n*Items:*\n${itemsList}\n\n*Total: Le ${totalPrice.toLocaleString()}*\n\nPlease confirm my order!`;
     
-    window.open(`https://wa.me/23276682626?text=${encodeURIComponent(message)}`, '_blank');
+    openWhatsApp(message);
   };
 
   return (

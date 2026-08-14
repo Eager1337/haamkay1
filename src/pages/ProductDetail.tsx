@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Star, ShieldCheck, Heart, Share2, ChevronLeft, ChevronRight, ShoppingBag, Minus, Plus, MessageCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCart } from '@/contexts/CartContext';
+import { openWhatsApp } from '@/lib/whatsapp';
+import TikTokEmbed from '@/components/TikTokEmbed';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ProductCard from '@/components/home/ProductCard';
@@ -73,7 +75,7 @@ const ProductDetail = () => {
     if (!product) return;
     
     const message = `Hi, I'm interested in:\n\n*${product.name}*\nQuantity: ${quantity}\nPrice: Le ${(product.price * quantity).toLocaleString()}\n\nPlease let me know how to proceed!`;
-    window.open(`https://wa.me/23276682626?text=${encodeURIComponent(message)}`, '_blank');
+    openWhatsApp(message);
   };
 
   if (loading) {
