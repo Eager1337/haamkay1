@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, FolderOpen, ShoppingCart, BarChart3, Settings, Users,
-  Package, LogOut, Layers, Sparkles, Bell, Images, CalendarClock, Boxes, Menu, X
+  Package, LogOut, Layers, Sparkles, Bell, Images, CalendarClock, Boxes, Menu, X,
+  Inbox, FileSpreadsheet, History, Music2, ExternalLink
 } from 'lucide-react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
@@ -14,14 +15,18 @@ const navGroups = [
       { name: 'Products', path: '/admin/products', icon: Package },
       { name: 'Categories', path: '/admin/categories', icon: FolderOpen },
       { name: 'Inventory', path: '/admin/inventory', icon: Boxes },
+      { name: 'Price History', path: '/admin/price-history', icon: History },
     ],
   },
   {
     label: 'Content',
     items: [
       { name: 'AI Listing', path: '/admin/ai-listing', icon: Sparkles },
+      { name: 'AI Approval Queue', path: '/admin/ai-queue', icon: Inbox },
       { name: 'Bulk Upload', path: '/admin/bulk-upload', icon: Layers },
+      { name: 'CSV Import', path: '/admin/csv-import', icon: FileSpreadsheet },
       { name: 'Media Library', path: '/admin/media', icon: Images },
+      { name: 'TikTok', path: '/admin/tiktok', icon: Music2 },
       { name: 'Drops & Prices', path: '/admin/schedule', icon: CalendarClock },
     ],
   },
