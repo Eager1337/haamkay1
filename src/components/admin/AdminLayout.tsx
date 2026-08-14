@@ -111,9 +111,16 @@ export const AdminLayout = ({ children, title, subtitle, actions }: AdminLayoutP
           </div>
         ))}
       </nav>
+      <Link
+        to="/"
+        className="mt-4 flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gold border border-gold/40 hover:bg-gold/10 transition-colors"
+      >
+        <ExternalLink className="w-4 h-4" />
+        View site
+      </Link>
       <button
         onClick={handleLogout}
-        className="mt-4 flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-destructive/20 hover:text-destructive transition-colors"
+        className="mt-2 flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-destructive/20 hover:text-destructive transition-colors"
       >
         <LogOut className="w-4 h-4" />
         Logout
