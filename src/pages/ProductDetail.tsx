@@ -21,6 +21,7 @@ interface Product {
   videos: string[] | null;
   featured: boolean;
   is_highlight: boolean;
+  tiktok_url?: string | null;
 }
 
 const ProductDetail = () => {
@@ -264,6 +265,14 @@ const ProductDetail = () => {
               </div>
             </motion.div>
           </div>
+
+          {product.tiktok_url && (
+            <div className="mt-12 md:mt-16">
+              <h2 className="text-lg md:text-2xl font-serif font-bold text-foreground mb-4">See it on TikTok</h2>
+              <TikTokEmbed url={product.tiktok_url} className="max-w-md" />
+            </div>
+          )}
+
 
           {/* Related Products */}
           {relatedProducts.length > 0 && (
