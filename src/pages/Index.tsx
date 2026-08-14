@@ -6,6 +6,7 @@ import FeaturedProducts from '@/components/home/FeaturedProducts';
 import HighlightSection from '@/components/home/HighlightSection';
 import CategoriesSection from '@/components/home/CategoriesSection';
 import NewsletterSection from '@/components/home/NewsletterSection';
+import TikTokSection from '@/components/home/TikTokSection';
 
 const Index = () => {
   return (
@@ -17,6 +18,7 @@ const Index = () => {
         <FeaturedProducts />
         <HighlightSection />
         <CategoriesSection />
+        <TikTokSection />
         <NewsletterSection />
       </main>
       <Footer />

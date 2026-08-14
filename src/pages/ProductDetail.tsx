@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Star, ShieldCheck, Heart, Share2, ChevronLeft, ChevronRight, ShoppingBag, Minus, Plus, MessageCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCart } from '@/contexts/CartContext';
+import { openWhatsApp } from '@/lib/whatsapp';
+import TikTokEmbed from '@/components/TikTokEmbed';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ProductCard from '@/components/home/ProductCard';
@@ -19,6 +21,7 @@ interface Product {
   videos: string[] | null;
   featured: boolean;
   is_highlight: boolean;
+  tiktok_url?: string | null;
 }
 
 const ProductDetail = () => {
@@ -73,7 +76,7 @@ const ProductDetail = () => {
     if (!product) return;
     
     const message = `Hi, I'm interested in:\n\n*${product.name}*\nQuantity: ${quantity}\nPrice: Le ${(product.price * quantity).toLocaleString()}\n\nPlease let me know how to proceed!`;
-    window.open(`https://wa.me/23276682626?text=${encodeURIComponent(message)}`, '_blank');
+    openWhatsApp(message);
   };
 
   if (loading) {
@@ -262,6 +265,14 @@ const ProductDetail = () => {
               </div>
             </motion.div>
           </div>
+
+          {product.tiktok_url && (
+            <div className="mt-12 md:mt-16">
+              <h2 className="text-lg md:text-2xl font-serif font-bold text-foreground mb-4">See it on TikTok</h2>
+              <TikTokEmbed url={product.tiktok_url} className="max-w-md" />
+            </div>
+          )}
+
 
           {/* Related Products */}
           {relatedProducts.length > 0 && (

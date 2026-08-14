@@ -23,6 +23,10 @@ import AdminInventory from "./pages/AdminInventory";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminMedia from "./pages/AdminMedia";
 import AdminSchedule from "./pages/AdminSchedule";
+import AdminAIQueue from "./pages/AdminAIQueue";
+import AdminCsvImport from "./pages/AdminCsvImport";
+import AdminPriceHistory from "./pages/AdminPriceHistory";
+import AdminTikTok from "./pages/AdminTikTok";
 
 import ProductDetail from "./pages/ProductDetail";
 import Categories from "./pages/Categories";
@@ -64,6 +68,10 @@ const App = () => (
                 <Route path="/admin/notifications" element={<AdminNotifications />} />
                 <Route path="/admin/media" element={<AdminMedia />} />
                 <Route path="/admin/schedule" element={<AdminSchedule />} />
+                <Route path="/admin/ai-queue" element={<AdminAIQueue />} />
+                <Route path="/admin/csv-import" element={<AdminCsvImport />} />
+                <Route path="/admin/price-history" element={<AdminPriceHistory />} />
+                <Route path="/admin/tiktok" element={<AdminTikTok />} />
 
                 <Route path="/admin/categories" element={<AdminCategories />} />
                 <Route path="/admin/bulk-upload" element={<AdminBulkUpload />} />

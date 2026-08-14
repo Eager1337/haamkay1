@@ -5,7 +5,6 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { validateMediaFile } from '@/lib/fileValidation';
-import { broadcastNotification } from '@/lib/notify';
 
 interface Draft {
   image: string;
@@ -92,7 +91,7 @@ const AdminAIListing = () => {
       if (!match.draft) return { ...d, status: 'error', error: match.error ?? 'No result' };
       return { ...d, ...match.draft, status: 'ready' };
     }));
-    toast.success('AI listings ready — review and publish.');
+    toast.success('AI listings ready — review and send to the approval queue.');
   };
 
   const update = (index: number, patch: Partial<Draft>) =>
@@ -107,32 +106,23 @@ const AdminAIListing = () => {
       return;
     }
 
-    if (!categories.includes(d.category)) {
-      await supabase.from('categories').insert({ name: d.category });
-      setCategories(prev => [...prev, d.category]);
-    }
-
-    const { data: product, error } = await supabase.from('products').insert({
-      name: d.name, category: d.category, price: d.price, description: d.description,
-      stock: d.stock, images: [d.image], videos: [],
-    }).select('id').single();
+    const { error } = await supabase.from('ai_drafts').insert({
+      name: d.name,
+      category: d.category,
+      price: d.price,
+      description: d.description,
+      stock: d.stock,
+      images: [d.image],
+      status: 'pending',
+    });
 
     if (error) {
-      toast.error(`Publish failed: ${error.message}`);
+      toast.error(`Could not send to queue: ${error.message}`);
       return;
     }
 
-    await broadcastNotification({
-      type: 'new_product',
-      title: `New arrival: ${d.name}`,
-      body: `${d.category} · Le ${d.price.toLocaleString()}`,
-      imageUrl: d.image,
-      link: `/product/${product.id}`,
-      productId: product.id,
-    });
-
     update(index, { status: 'published' });
-    toast.success('Published and customers notified!');
+    toast.success('Sent to the AI approval queue for review.');
   };
 
   const publishAll = async () => {
@@ -144,7 +134,7 @@ const AdminAIListing = () => {
   return (
     <AdminLayout
       title="AI Listing Studio"
-      subtitle="Upload photos — AI writes the name, category, price and description"
+      subtitle="Upload photos — AI drafts the listing, then approve it in the AI queue"
       actions={
         <>
           <button onClick={runAI} disabled={analyzing} className="btn-gold flex items-center gap-2 !py-2 !px-4 text-sm">
@@ -152,7 +142,7 @@ const AdminAIListing = () => {
             {analyzing ? 'Analyzing…' : 'Run AI'}
           </button>
           <button onClick={publishAll} className="px-4 py-2 rounded-lg border border-gold text-gold text-sm hover:bg-gold/10">
-            Publish all ready
+            Send all to queue
           </button>
         </>
       }
@@ -187,7 +177,7 @@ const AdminAIListing = () => {
                   </div>
                 )}
                 {d.status === 'published' && (
-                  <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-gold text-teal-darker text-xs font-semibold">Published</div>
+                  <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-gold text-teal-darker text-xs font-semibold">In queue</div>
                 )}
               </div>
 
@@ -232,7 +222,7 @@ const AdminAIListing = () => {
                   disabled={d.status === 'published'}
                   className="flex-1 btn-gold !py-2 text-sm flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  <Check className="w-4 h-4" /> Publish
+                  <Check className="w-4 h-4" /> Send to queue
                 </button>
                 <button onClick={() => remove(i)} className="p-2 rounded-lg text-muted-foreground hover:text-destructive">
                   <Trash2 className="w-4 h-4" />
