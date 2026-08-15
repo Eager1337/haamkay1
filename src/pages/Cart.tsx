@@ -4,19 +4,13 @@ import { Link } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import { openWhatsApp } from '@/lib/whatsapp';
+import { openWhatsApp, buildCartMessage } from '@/lib/whatsapp';
 
 const Cart = () => {
   const { items, removeFromCart, updateQuantity, totalPrice } = useCart();
 
   const handleWhatsAppCheckout = () => {
-    const itemsList = items
-      .map(item => `• ${item.product?.name} x${item.quantity} - Le ${((item.product?.price || 0) * item.quantity).toLocaleString()}`)
-      .join('\n');
-    
-    const message = `🛒 *Order from Haamkay*\n\n*Items:*\n${itemsList}\n\n*Total: Le ${totalPrice.toLocaleString()}*\n\nPlease confirm my order!`;
-    
-    openWhatsApp(message);
+    openWhatsApp(buildCartMessage(items, totalPrice));
   };
 
   return (

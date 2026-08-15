@@ -20,3 +20,77 @@ export function openWhatsApp(message?: string, number: string = WHATSAPP_NUMBER)
   const win = window.open(url, '_blank', 'noopener,noreferrer');
   if (!win) window.location.href = url;
 }
+
+const money = (n: number) => `Le ${Math.round(n).toLocaleString()}`;
+
+const absolute = (url?: string | null) => {
+  if (!url) return null;
+  if (/^https?:\/\//i.test(url)) return url;
+  if (typeof window === 'undefined') return url;
+  return `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
+export interface WaProduct {
+  id?: string;
+  name?: string | null;
+  category?: string | null;
+  price?: number | null;
+  images?: string[] | null;
+}
+
+/** Draft for a single product enquiry — includes the photo and a link to the page. */
+export function buildProductMessage(product: WaProduct, quantity = 1) {
+  const image = absolute(product.images?.[0]);
+  const link = product.id && typeof window !== 'undefined'
+    ? `${window.location.origin}/product/${product.id}`
+    : null;
+
+  return [
+    '🛍️ *Order from Haamkay Enterprises*',
+    '',
+    `*${product.name ?? 'Product'}*`,
+    product.category ? `Category: ${product.category}` : null,
+    `Quantity: ${quantity}`,
+    `Price: ${money((product.price ?? 0) * quantity)}`,
+    image ? `\n📸 Photo: ${image}` : null,
+    link ? `🔗 Product page: ${link}` : null,
+    '',
+    'Please confirm availability and delivery. Thank you!',
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
+export interface WaCartItem {
+  product_id?: string;
+  quantity: number;
+  product?: WaProduct | null;
+}
+
+/** Draft for a full cart checkout — every line carries its own photo link. */
+export function buildCartMessage(items: WaCartItem[], total: number) {
+  const lines = items.map((item, i) => {
+    const p = item.product ?? {};
+    const image = absolute(p.images?.[0]);
+    const link = (p.id ?? item.product_id) && typeof window !== 'undefined'
+      ? `${window.location.origin}/product/${p.id ?? item.product_id}`
+      : null;
+    return [
+      `${i + 1}. *${p.name ?? 'Product'}* × ${item.quantity} — ${money((p.price ?? 0) * item.quantity)}`,
+      image ? `   📸 ${image}` : null,
+      link ? `   🔗 ${link}` : null,
+    ]
+      .filter(Boolean)
+      .join('\n');
+  });
+
+  return [
+    '🛒 *Order from Haamkay Enterprises*',
+    '',
+    ...lines,
+    '',
+    `*Total: ${money(total)}*`,
+    '',
+    'Please confirm my order and delivery details. Thank you!',
+  ].join('\n');
+}

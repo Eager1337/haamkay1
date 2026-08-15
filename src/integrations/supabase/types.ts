@@ -72,19 +72,25 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          image_url: string | null
           name: string
+          sort_order: number
         }
         Insert: {
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           name: string
+          sort_order?: number
         }
         Update: {
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           name?: string
+          sort_order?: number
         }
         Relationships: []
       }
@@ -103,6 +109,36 @@ export type Database = {
           count?: number
           id?: string
           upload_date?: string
+        }
+        Relationships: []
+      }
+      faqs: {
+        Row: {
+          answer: string
+          created_at: string
+          id: string
+          published: boolean
+          question: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          id?: string
+          published?: boolean
+          question: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          id?: string
+          published?: boolean
+          question?: string
+          sort_order?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -352,6 +388,39 @@ export type Database = {
           key?: string
           updated_at?: string
           value?: string | null
+        }
+        Relationships: []
+      }
+      testimonials: {
+        Row: {
+          author: string
+          avatar_url: string | null
+          created_at: string
+          id: string
+          published: boolean
+          quote: string
+          rating: number
+          updated_at: string
+        }
+        Insert: {
+          author: string
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          published?: boolean
+          quote: string
+          rating?: number
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          published?: boolean
+          quote?: string
+          rating?: number
+          updated_at?: string
         }
         Relationships: []
       }
