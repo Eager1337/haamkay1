@@ -8,6 +8,7 @@ interface Category {
   id: string;
   name: string;
   description: string;
+  image_url: string | null;
 }
 
 const categoryImages: Record<string, string> = {
@@ -67,7 +68,7 @@ const CategoriesSection = () => {
                 className="group block relative aspect-[3/4] rounded-2xl overflow-hidden"
               >
                 <img
-                  src={categoryImages[category.name] || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600'}
+                  src={category.image_url || categoryImages[category.name] || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600'}
                   alt={category.name}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />

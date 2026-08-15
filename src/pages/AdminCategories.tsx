@@ -10,6 +10,7 @@ interface Category {
   id: string;
   name: string;
   description: string | null;
+  image_url: string | null;
   created_at: string;
 }
 
@@ -18,7 +19,8 @@ const AdminCategories = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [form, setForm] = useState({ name: '', description: '' });
+  const [form, setForm] = useState({ name: '', description: '', image_url: '' });
+  const [uploading, setUploading] = useState(false);
   const [productCounts, setProductCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
@@ -53,24 +55,40 @@ const AdminCategories = () => {
     }
     
     if (editingCategory) {
-      const { error } = await supabase.from('categories').update(form).eq('id', editingCategory.id);
+      const { error } = await supabase
+        .from('categories')
+        .update({ name: form.name, description: form.description, image_url: form.image_url || null })
+        .eq('id', editingCategory.id);
       if (error) {
         toast.error(`Failed to update: ${error.message}`);
         return;
       }
       toast.success('Category updated!');
     } else {
-      const { error } = await supabase.from('categories').insert(form);
+      const { error } = await supabase
+        .from('categories')
+        .insert({ name: form.name, description: form.description, image_url: form.image_url || null });
       if (error) {
         toast.error(`Failed to add: ${error.message}`);
         return;
       }
       toast.success('Category added!');
     }
-    setForm({ name: '', description: '' });
+    setForm({ name: '', description: '', image_url: '' });
     setEditingCategory(null);
     setShowForm(false);
     fetchData();
+  };
+
+  const handleCover = async (file: File) => {
+    setUploading(true);
+    const path = `categories/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    const { error } = await supabase.storage.from('product-media').upload(path, file, { contentType: file.type });
+    setUploading(false);
+    if (error) return toast.error(error.message);
+    const { data } = supabase.storage.from('product-media').getPublicUrl(path);
+    setForm(f => ({ ...f, image_url: data.publicUrl }));
+    toast.success('Cover image uploaded');
   };
 
   const handleDelete = async (id: string, name: string) => {
@@ -89,7 +107,7 @@ const AdminCategories = () => {
   };
 
   const startEdit = (cat: Category) => {
-    setForm({ name: cat.name, description: cat.description || '' });
+    setForm({ name: cat.name, description: cat.description || '', image_url: cat.image_url || '' });
     setEditingCategory(cat);
     setShowForm(true);
   };
@@ -109,7 +127,7 @@ const AdminCategories = () => {
       title="Categories"
       subtitle="Manage product categories"
       actions={
-        <button onClick={() => { setShowForm(true); setEditingCategory(null); setForm({ name: '', description: '' }); }} className="btn-gold flex items-center gap-2 !py-2 !px-4">
+        <button onClick={() => { setShowForm(true); setEditingCategory(null); setForm({ name: '', description: '', image_url: '' }); }} className="btn-gold flex items-center gap-2 !py-2 !px-4">
           <Plus className="w-4 h-4" /> Add Category
         </button>
       }
@@ -135,6 +153,30 @@ const AdminCategories = () => {
                 className="w-full bg-muted border border-border rounded-lg px-4 py-3 text-foreground h-24"
                 maxLength={500}
               />
+              <div className="space-y-2">
+                <label className="text-sm text-muted-foreground">Cover image</label>
+                {form.image_url && (
+                  <img src={form.image_url} alt="Category cover preview" className="w-full h-36 object-cover rounded-lg border border-border" />
+                )}
+                <div className="flex gap-2">
+                  <input
+                    placeholder="Image URL"
+                    value={form.image_url}
+                    onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))}
+                    className="flex-1 bg-muted border border-border rounded-lg px-4 py-2 text-foreground text-sm"
+                  />
+                  {form.image_url && (
+                    <button type="button" onClick={() => setForm(f => ({ ...f, image_url: '' }))} className="px-3 rounded-lg border border-border text-sm text-muted-foreground">Clear</button>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={e => { const f = e.target.files?.[0]; if (f) handleCover(f); }}
+                  className="w-full text-sm text-muted-foreground"
+                />
+                {uploading && <p className="text-xs text-gold">Uploading…</p>}
+              </div>
               <div className="flex gap-4">
                 <button type="submit" className="btn-gold flex-1">{editingCategory ? 'Update' : 'Add'}</button>
                 <button type="button" onClick={() => { setShowForm(false); setEditingCategory(null); }} className="btn-outline-gold">Cancel</button>
@@ -148,6 +190,11 @@ const AdminCategories = () => {
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {categories.map(cat => (
           <div key={cat.id} className="card-luxury">
+            {cat.image_url ? (
+              <img src={cat.image_url} alt={`${cat.name} cover`} className="w-full h-32 object-cover rounded-lg mb-4" />
+            ) : (
+              <div className="w-full h-32 rounded-lg mb-4 bg-muted flex items-center justify-center text-xs text-muted-foreground">No cover image</div>
+            )}
             <div className="flex items-start justify-between mb-4">
               <div className="w-12 h-12 rounded-full bg-gold/20 flex items-center justify-center">
                 <FolderOpen className="w-6 h-6 text-gold" />
