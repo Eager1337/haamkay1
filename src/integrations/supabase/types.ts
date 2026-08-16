@@ -17,6 +17,7 @@ export type Database = {
       ai_drafts: {
         Row: {
           category: string | null
+          colors: string[]
           created_at: string
           description: string | null
           error: string | null
@@ -25,12 +26,14 @@ export type Database = {
           name: string | null
           price: number
           published_product_id: string | null
+          sizes: string[]
           status: string
           stock: number
           updated_at: string
         }
         Insert: {
           category?: string | null
+          colors?: string[]
           created_at?: string
           description?: string | null
           error?: string | null
@@ -39,12 +42,14 @@ export type Database = {
           name?: string | null
           price?: number
           published_product_id?: string | null
+          sizes?: string[]
           status?: string
           stock?: number
           updated_at?: string
         }
         Update: {
           category?: string | null
+          colors?: string[]
           created_at?: string
           description?: string | null
           error?: string | null
@@ -53,6 +58,7 @@ export type Database = {
           name?: string | null
           price?: number
           published_product_id?: string | null
+          sizes?: string[]
           status?: string
           stock?: number
           updated_at?: string
@@ -172,6 +178,42 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_schedules: {
+        Row: {
+          active: boolean
+          body: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          interval_seconds: number
+          link: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          body?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          interval_seconds?: number
+          link?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          body?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          interval_seconds?: number
+          link?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string | null
@@ -251,6 +293,7 @@ export type Database = {
       products: {
         Row: {
           category: string
+          colors: string[]
           created_at: string
           description: string | null
           featured: boolean
@@ -261,6 +304,7 @@ export type Database = {
           name: string
           price: number
           published: boolean
+          sizes: string[]
           stock: number
           tiktok_url: string | null
           updated_at: string
@@ -268,6 +312,7 @@ export type Database = {
         }
         Insert: {
           category: string
+          colors?: string[]
           created_at?: string
           description?: string | null
           featured?: boolean
@@ -278,6 +323,7 @@ export type Database = {
           name: string
           price?: number
           published?: boolean
+          sizes?: string[]
           stock?: number
           tiktok_url?: string | null
           updated_at?: string
@@ -285,6 +331,7 @@ export type Database = {
         }
         Update: {
           category?: string
+          colors?: string[]
           created_at?: string
           description?: string | null
           featured?: boolean
@@ -295,6 +342,7 @@ export type Database = {
           name?: string
           price?: number
           published?: boolean
+          sizes?: string[]
           stock?: number
           tiktok_url?: string | null
           updated_at?: string
@@ -388,6 +436,42 @@ export type Database = {
           key?: string
           updated_at?: string
           value?: string | null
+        }
+        Relationships: []
+      }
+      team_members: {
+        Row: {
+          bio: string | null
+          created_at: string
+          id: string
+          name: string
+          photo_url: string | null
+          published: boolean
+          role: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          photo_url?: string | null
+          published?: boolean
+          role?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          photo_url?: string | null
+          published?: boolean
+          role?: string | null
+          sort_order?: number
+          updated_at?: string
         }
         Relationships: []
       }
