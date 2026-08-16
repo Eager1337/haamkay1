@@ -27,6 +27,8 @@ import AdminAIQueue from "./pages/AdminAIQueue";
 import AdminCsvImport from "./pages/AdminCsvImport";
 import AdminPriceHistory from "./pages/AdminPriceHistory";
 import AdminTikTok from "./pages/AdminTikTok";
+import AdminSiteContent from "./pages/AdminSiteContent";
+import NotificationToaster from "./components/NotificationToaster";
 
 import ProductDetail from "./pages/ProductDetail";
 import Categories from "./pages/Categories";
@@ -47,6 +49,7 @@ const App = () => (
         <AdminAuthProvider>
           <UserProvider>
             <CartProvider>
+              <NotificationToaster />
               <Routes>
                 {/* Public Pages */}
                 <Route path="/" element={<Index />} />
@@ -72,6 +75,7 @@ const App = () => (
                 <Route path="/admin/csv-import" element={<AdminCsvImport />} />
                 <Route path="/admin/price-history" element={<AdminPriceHistory />} />
                 <Route path="/admin/tiktok" element={<AdminTikTok />} />
+                <Route path="/admin/site-content" element={<AdminSiteContent />} />
 
                 <Route path="/admin/categories" element={<AdminCategories />} />
                 <Route path="/admin/bulk-upload" element={<AdminBulkUpload />} />

@@ -7,6 +7,8 @@ import HighlightSection from '@/components/home/HighlightSection';
 import CategoriesSection from '@/components/home/CategoriesSection';
 import NewsletterSection from '@/components/home/NewsletterSection';
 import TikTokSection from '@/components/home/TikTokSection';
+import TestimonialsSection from '@/components/home/TestimonialsSection';
+import FaqSection from '@/components/home/FaqSection';
 
 const Index = () => {
   return (
@@ -19,6 +21,8 @@ const Index = () => {
         <HighlightSection />
         <CategoriesSection />
         <TikTokSection />
+        <TestimonialsSection />
+        <FaqSection />
         <NewsletterSection />
       </main>
       <Footer />
