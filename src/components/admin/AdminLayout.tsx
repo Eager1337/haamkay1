@@ -3,7 +3,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, FolderOpen, ShoppingCart, BarChart3, Settings, Users,
   Package, LogOut, Layers, Sparkles, Bell, Images, CalendarClock, Boxes, Menu, X,
-  Inbox, FileSpreadsheet, History, Music2, ExternalLink
+  Inbox, FileSpreadsheet, History, Music2, ExternalLink, MessageSquareQuote
 } from 'lucide-react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
@@ -28,6 +28,7 @@ const navGroups = [
       { name: 'Media Library', path: '/admin/media', icon: Images },
       { name: 'TikTok', path: '/admin/tiktok', icon: Music2 },
       { name: 'Drops & Prices', path: '/admin/schedule', icon: CalendarClock },
+      { name: 'Site Content', path: '/admin/site-content', icon: MessageSquareQuote },
     ],
   },
   {

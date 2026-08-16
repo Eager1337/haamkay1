@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useNotifications } from '@/hooks/useNotifications';
 import { enablePushNotifications, pushEnabled, pushSupported } from '@/lib/push';
+import { soundEnabled, setSoundEnabled, playAlertChime } from '@/lib/sound';
+import { Volume2, VolumeX } from 'lucide-react';
 
 const typeIcon = (type: string) => {
   if (type === 'price_change') return Tag;
@@ -28,6 +30,14 @@ export const NotificationBell = () => {
   const [open, setOpen] = useState(false);
   const [subscribed, setSubscribed] = useState(pushEnabled());
   const [working, setWorking] = useState(false);
+  const [sound, setSound] = useState(soundEnabled());
+
+  const toggleSound = () => {
+    const next = !sound;
+    setSoundEnabled(next);
+    setSound(next);
+    if (next) playAlertChime();
+  };
 
   const toggle = () => {
     setOpen((prev) => {
@@ -75,9 +85,19 @@ export const NotificationBell = () => {
             >
               <div className="flex items-center justify-between p-4 border-b border-border">
                 <h3 className="font-serif font-bold text-foreground">Alerts</h3>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={toggleSound}
+                    aria-label={sound ? 'Mute alert sound' : 'Unmute alert sound'}
+                    title={sound ? 'Sound on' : 'Sound off'}
+                    className={`p-2 rounded-lg transition-colors ${sound ? 'text-gold hover:bg-gold/10' : 'text-muted-foreground hover:bg-muted'}`}
+                  >
+                    {sound ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                  </button>
                 <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground sm:hidden">
                   <X className="w-5 h-5" />
                 </button>
+                </div>
               </div>
 
               {pushSupported() && !subscribed && (
