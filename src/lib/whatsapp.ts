@@ -40,7 +40,7 @@ export interface WaProduct {
 
 /** Draft for a single product enquiry — includes the photo and a link to the page. */
 export function buildProductMessage(product: WaProduct, quantity = 1) {
-  const image = absolute(product.images?.[0]);
+  const photos = (product.images ?? []).map(absolute).filter(Boolean).slice(0, 5) as string[];
   const link = product.id && typeof window !== 'undefined'
     ? `${window.location.origin}/product/${product.id}`
     : null;
@@ -52,7 +52,7 @@ export function buildProductMessage(product: WaProduct, quantity = 1) {
     product.category ? `Category: ${product.category}` : null,
     `Quantity: ${quantity}`,
     `Price: ${money((product.price ?? 0) * quantity)}`,
-    image ? `\n📸 Photo: ${image}` : null,
+    photos.length ? `\n📸 Photos:\n${photos.map((u) => `• ${u}`).join('\n')}` : null,
     link ? `🔗 Product page: ${link}` : null,
     '',
     'Please confirm availability and delivery. Thank you!',
@@ -71,13 +71,13 @@ export interface WaCartItem {
 export function buildCartMessage(items: WaCartItem[], total: number) {
   const lines = items.map((item, i) => {
     const p = item.product ?? {};
-    const image = absolute(p.images?.[0]);
+    const photos = (p.images ?? []).map(absolute).filter(Boolean).slice(0, 3) as string[];
     const link = (p.id ?? item.product_id) && typeof window !== 'undefined'
       ? `${window.location.origin}/product/${p.id ?? item.product_id}`
       : null;
     return [
       `${i + 1}. *${p.name ?? 'Product'}* × ${item.quantity} — ${money((p.price ?? 0) * item.quantity)}`,
-      image ? `   📸 ${image}` : null,
+      ...photos.map((u) => `   📸 ${u}`),
       link ? `   🔗 ${link}` : null,
     ]
       .filter(Boolean)
