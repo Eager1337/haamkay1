@@ -43,19 +43,20 @@ export const NotificationToaster = () => {
     delete timers.current[id];
   };
 
+  const push = (note: LiveNotification) => {
+    setQueue((prev) => [note, ...prev.filter((n) => n.id !== note.id)].slice(0, 3));
+    playAlertChime();
+    vibrateAlert();
+    timers.current[note.id] = setTimeout(() => dismiss(note.id), 8000);
+  };
+
   useEffect(() => {
     const channel = supabase
       .channel('live-alert-toasts')
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'notifications' },
-        (payload) => {
-          const note = payload.new as LiveNotification;
-          setQueue((prev) => [note, ...prev].slice(0, 3));
-          playAlertChime();
-          vibrateAlert();
-          timers.current[note.id] = setTimeout(() => dismiss(note.id), 8000);
-        }
+        (payload) => push(payload.new as LiveNotification)
       )
       .subscribe();
 
@@ -63,6 +64,40 @@ export const NotificationToaster = () => {
       Object.values(timers.current).forEach(clearTimeout);
       timers.current = {};
       supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Repeating scheduled alerts — fire on every visitor's device at their own interval.
+  useEffect(() => {
+    let intervals: ReturnType<typeof setInterval>[] = [];
+    let cancelled = false;
+
+    const start = async () => {
+      const { data } = await supabase
+        .from('notification_schedules')
+        .select('id, title, body, image_url, link, interval_seconds, active')
+        .eq('active', true);
+      if (cancelled || !data) return;
+
+      intervals = data.map((s) =>
+        setInterval(() => {
+          push({
+            id: `${s.id}-${Date.now()}`,
+            type: 'general',
+            title: s.title,
+            body: s.body,
+            image_url: s.image_url,
+            link: s.link,
+            created_at: new Date().toISOString(),
+          });
+        }, Math.max(5, s.interval_seconds) * 1000)
+      );
+    };
+
+    start();
+    return () => {
+      cancelled = true;
+      intervals.forEach(clearInterval);
     };
   }, []);
 
