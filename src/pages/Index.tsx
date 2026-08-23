@@ -9,6 +9,7 @@ import NewsletterSection from '@/components/home/NewsletterSection';
 import TikTokSection from '@/components/home/TikTokSection';
 import TestimonialsSection from '@/components/home/TestimonialsSection';
 import FaqSection from '@/components/home/FaqSection';
+import DownloadSection from '@/components/home/DownloadSection';
 
 const Index = () => {
   return (
@@ -23,6 +24,7 @@ const Index = () => {
         <TikTokSection />
         <TestimonialsSection />
         <FaqSection />
+        <DownloadSection />
         <NewsletterSection />
       </main>
       <Footer />

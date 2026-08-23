@@ -3,7 +3,8 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, FolderOpen, ShoppingCart, BarChart3, Settings, Users,
   Package, LogOut, Layers, Sparkles, Bell, Images, CalendarClock, Boxes, Menu, X,
-  Inbox, FileSpreadsheet, History, Music2, ExternalLink, MessageSquareQuote
+  Inbox, FileSpreadsheet, History, Music2, ExternalLink, MessageSquareQuote,
+  ZoomIn, Copy
 } from 'lucide-react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
@@ -16,6 +17,7 @@ const navGroups = [
       { name: 'Categories', path: '/admin/categories', icon: FolderOpen },
       { name: 'Inventory', path: '/admin/inventory', icon: Boxes },
       { name: 'Price History', path: '/admin/price-history', icon: History },
+      { name: 'Duplicate Products', path: '/admin/duplicate-products', icon: Copy },
     ],
   },
   {
