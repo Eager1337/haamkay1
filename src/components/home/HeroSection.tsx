@@ -146,7 +146,7 @@ const HeroSection = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
             >
               <span className="inline-block px-3 py-1.5 md:px-4 md:py-2 bg-gold/20 border border-gold/40 rounded-full text-gold text-xs md:text-sm font-medium mb-4 md:mb-6">
-                ✨ New Collection 2024
+                ✨ New Collection 2026
               </span>
             </motion.div>
 
