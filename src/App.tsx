@@ -76,6 +76,8 @@ const App = () => (
                 <Route path="/admin/price-history" element={<AdminPriceHistory />} />
                 <Route path="/admin/tiktok" element={<AdminTikTok />} />
                 <Route path="/admin/site-content" element={<AdminSiteContent />} />
+                <Route path="/admin/image-upscaler" element={<AdminImageUpscaler />} />
+                <Route path="/admin/duplicate-products" element={<AdminDuplicateProducts />} />
 
                 <Route path="/admin/categories" element={<AdminCategories />} />
                 <Route path="/admin/bulk-upload" element={<AdminBulkUpload />} />

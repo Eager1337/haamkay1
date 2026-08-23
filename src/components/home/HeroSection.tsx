@@ -182,9 +182,33 @@ const HeroSection = () => {
                 Shop Daily Drops
                 <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
               </Link>
-              <Link to="/categories" className="btn-outline-gold text-center text-sm md:text-base py-3 md:py-4">
-                Explore Collections
-              </Link>
+              <a href="#download" className="btn-outline-gold flex items-center justify-center gap-2 text-sm md:text-base py-3 md:py-4">
+                <Download className="w-4 h-4 md:w-5 md:h-5" />
+                Get the App
+              </a>
+            </motion.div>
+
+            {/* Platform badges */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1 }}
+              className="flex items-center gap-2 mt-2"
+            >
+              <span className="text-xs text-muted-foreground">Available on:</span>
+              <div className="flex items-center gap-1.5">
+                {[
+                  { icon: Apple, label: 'iOS' },
+                  { icon: Smartphone, label: 'Android' },
+                  { icon: Monitor, label: 'Windows' },
+                  { icon: Apple, label: 'macOS' },
+                ].map(({ icon: Icon, label }) => (
+                  <span key={label} className="flex items-center gap-1 px-2 py-1 rounded-full bg-card/80 backdrop-blur-sm border border-border text-gold text-[11px] font-medium">
+                    <Icon className="w-3 h-3" />
+                    {label}
+                  </span>
+                ))}
+              </div>
             </motion.div>
           </div>
 
