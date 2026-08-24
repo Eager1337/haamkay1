@@ -84,6 +84,7 @@ const DownloadSection = () => {
             <motion.a
               key={s.label}
               href="#download"
+              onClick={(e) => { e.preventDefault(); handleDownload(); }}
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}

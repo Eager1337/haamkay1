@@ -72,9 +72,12 @@ const AdminAIListing = () => {
     setAnalyzing(true);
     setDrafts(prev => prev.map(d => (d.status === 'pending' || d.status === 'error' ? { ...d, status: 'analyzing' } : d)));
 
-    const { data, error } = await supabase.functions.invoke('ai-product-draft', {
-      body: { images: pending.map(d => d.image), categories },
-    });
+    let data, error;
+    try {
+      data = await invokeAIProductDraft({ images: pending.map(d => d.image), categories });
+    } catch (e) {
+      error = e as Error;
+    }
 
     setAnalyzing(false);
 
