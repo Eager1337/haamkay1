@@ -57,7 +57,12 @@ app.post('/api/ai-product-draft', async (req, res) => {
 
     const apiKey = process.env.OPENAI_API_KEY;
 
-    const results = await Promise.all(images.map(async (url) => {
+    // Process in batches of 3 to avoid OpenAI rate limits with many images
+    const BATCH_SIZE = 3;
+    const results = [];
+    for (let i = 0; i < images.length; i += BATCH_SIZE) {
+      const batch = images.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.all(batch.map(async (url) => {
       try {
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
@@ -136,6 +141,8 @@ app.post('/api/ai-product-draft', async (req, res) => {
         return { image: url, error: err.message };
       }
     }));
+      results.push(...batchResults);
+    }
 
     res.json({ results });
   } catch (err) {

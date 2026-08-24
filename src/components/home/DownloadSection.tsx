@@ -1,18 +1,7 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Apple, Smartphone, Monitor, Download, Laptop } from 'lucide-react';
-import { toast } from 'sonner';
-import { promptInstall } from '@/lib/pwa-install';
-
-const handleDownload = async () => {
-  const outcome = await promptInstall();
-  if (outcome === 'unavailable') {
-    toast.info('To install the app, use your browser menu → "Install app" or "Add to Home Screen".');
-  } else if (outcome === 'dismissed') {
-    toast.info('Maybe next time!');
-  } else {
-    toast.success('Haamkay is installing…');
-  }
-};
+import InstallDialog from '@/components/home/InstallDialog';
 
 const platforms = [
   {
@@ -39,6 +28,8 @@ const storeLinks = [
 ];
 
 const DownloadSection = () => {
+  const [dialogOpen, setDialogOpen] = useState(false);
+
   return (
     <section id="download" className="py-16 md:py-24 px-4 md:px-6 bg-gradient-to-b from-background to-teal-darker/40">
       <div className="container mx-auto max-w-5xl">
@@ -94,22 +85,21 @@ const DownloadSection = () => {
         {/* Download buttons */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           {storeLinks.map((s, i) => (
-            <motion.a
+            <motion.button
               key={s.label}
-              href="#download"
-              onClick={(e) => { e.preventDefault(); handleDownload(); }}
+              onClick={() => setDialogOpen(true)}
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: i * 0.1 }}
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.97 }}
-              className="flex flex-col items-center gap-1 p-4 md:p-5 rounded-xl bg-card border border-border hover:border-gold/50 hover:bg-gold/5 transition-colors group"
+              className="flex flex-col items-center gap-1 p-4 md:p-5 rounded-xl bg-card border border-border hover:border-gold/50 hover:bg-gold/5 transition-colors group cursor-pointer"
             >
               <s.icon className="w-6 h-6 md:w-7 md:h-7 text-gold mb-1 group-hover:scale-110 transition-transform" />
               <span className="text-sm font-semibold text-foreground">{s.label}</span>
               <span className="text-[11px] text-muted-foreground">{s.sub}</span>
-            </motion.a>
+            </motion.button>
           ))}
         </div>
 
@@ -131,6 +121,8 @@ const DownloadSection = () => {
           </a>
         </motion.div>
       </div>
+
+      <InstallDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
     </section>
   );
 };
