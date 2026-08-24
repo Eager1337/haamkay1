@@ -19,8 +19,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const apiKey = Deno.env.get('LOVABLE_API_KEY');
-    if (!apiKey) throw new Error('LOVABLE_API_KEY is not configured');
+    const apiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!apiKey) throw new Error('OPENAI_API_KEY is not configured');
 
     const body = await req.json();
     const images: string[] = Array.isArray(body?.images) ? body.images.slice(0, 12) : [];

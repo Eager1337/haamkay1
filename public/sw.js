@@ -26,3 +26,17 @@ self.addEventListener('notificationclick', (event) => {
     })
   );
 });
+
+/* Network-first fetch handler for PWA installability + offline fallback. */
+self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
+  event.respondWith(
+    fetch(event.request).catch(() => caches.match(event.request).then((r) => r || caches.match('/')))
+  );
+});
+ent.navigate(url); return client.focus(); }
+      }
+      return self.clients.openWindow(url);
+    })
+  );
+});
