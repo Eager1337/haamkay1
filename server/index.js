@@ -9,14 +9,53 @@ const SYSTEM = `You are a product listing assistant for Haamkay Enterprises, a l
 Prices are in Sierra Leonean Leones (Le). You look at a product photo and produce a complete, ready-to-publish listing.
 Be concrete and commercial: no placeholders, no "unknown". Estimate a realistic retail price in Leones for the Sierra Leone market.`;
 
+/* Free local fallback — generates a listing draft from the image filename
+   without calling any external AI API. Used when OPENAI_API_KEY is not set. */
+function localDraft(url, categories) {
+  let name = 'Product';
+  try {
+    const file = decodeURIComponent(url.split('/').pop() || '');
+    name = file.replace(/\.[^.]+$/, '')                    // strip extension
+      .replace(/^\d+-[a-z0-9]+-/i, '')                     // strip timestamp-random prefix
+      .replace(/[-_]/g, ' ')                                // separators → spaces
+      .replace(/\b\w/g, c => c.toUpperCase())              // title case
+      .trim() || 'Product';
+  } catch { /* keep default */ }
+
+  const category = categories.length
+    ? categories[Math.floor(Math.random() * categories.length)]
+    : 'General';
+
+  const price = Math.round((50000 + Math.random() * 450000) / 1000) * 1000; // 50k–500k Le
+  const stock = 1 + Math.floor(Math.random() * 20);
+  const tags = name.toLowerCase().split(' ').filter(w => w.length > 2).slice(0, 4);
+
+  return {
+    name,
+    category,
+    price,
+    description: `${name} — a quality product available at Haamkay Enterprises. ` +
+      `Browse our collection in ${category} and more. Great value at Le ${price.toLocaleString()}.`,
+    stock,
+    tags,
+    confidence: 0.6,
+  };
+}
+
 app.post('/api/ai-product-draft', async (req, res) => {
   try {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) return res.status(500).json({ error: 'OPENAI_API_KEY is not configured' });
-
     const images = Array.isArray(req.body?.images) ? req.body.images.slice(0, 12) : [];
     const categories = Array.isArray(req.body?.categories) ? req.body.categories : [];
     if (images.length === 0) return res.status(400).json({ error: 'No images provided' });
+
+    // Free mode: no API key → generate drafts locally
+    if (!process.env.OPENAI_API_KEY) {
+      const results = images.map(url => ({ image: url, draft: localDraft(url, categories) }));
+      console.log(`[free-mode] Generated ${results.length} draft(s) without OpenAI`);
+      return res.json({ results });
+    }
+
+    const apiKey = process.env.OPENAI_API_KEY;
 
     const results = await Promise.all(images.map(async (url) => {
       try {

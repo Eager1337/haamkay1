@@ -1,5 +1,18 @@
 import { motion } from 'framer-motion';
 import { Apple, Smartphone, Monitor, Download, Laptop } from 'lucide-react';
+import { toast } from 'sonner';
+import { promptInstall } from '@/lib/pwa-install';
+
+const handleDownload = async () => {
+  const outcome = await promptInstall();
+  if (outcome === 'unavailable') {
+    toast.info('To install the app, use your browser menu → "Install app" or "Add to Home Screen".');
+  } else if (outcome === 'dismissed') {
+    toast.info('Maybe next time!');
+  } else {
+    toast.success('Haamkay is installing…');
+  }
+};
 
 const platforms = [
   {
