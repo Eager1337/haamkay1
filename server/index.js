@@ -40,7 +40,7 @@ Create a listing for this product.${
 Return ONLY a JSON object with these fields: name (string), category (string), price (number — retail price in Sierra Leonean Leones), description (string), stock (number), tags (array of short strings), confidence (number 0-1).`;
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
