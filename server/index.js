@@ -117,7 +117,9 @@ app.post('/api/ai-product-draft', async (req, res) => {
         if (!response.ok) {
           const details = await response.text();
           console.error(`OpenAI error [${response.status}]: ${details}`);
-          return { image: url, error: `AI error ${response.status}`, details };
+          // Fall back to local draft when OpenAI is unavailable (quota exhausted, rate limit, etc.)
+          console.log(`[fallback] Using local draft for image due to OpenAI error ${response.status}`);
+          return { image: url, draft: localDraft(url, categories) };
         }
 
         const json = await response.json();
@@ -138,7 +140,8 @@ app.post('/api/ai-product-draft', async (req, res) => {
         };
       } catch (err) {
         console.error('Failed to process image:', err);
-        return { image: url, error: err.message };
+        // Fall back to local draft on network/connection errors too
+        return { image: url, draft: localDraft(url, categories) };
       }
     }));
       results.push(...batchResults);
