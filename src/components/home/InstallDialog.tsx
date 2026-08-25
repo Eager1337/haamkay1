@@ -17,9 +17,13 @@ interface InstallDialogProps {
 const InstallDialog = ({ open, onClose }: InstallDialogProps) => {
   const [installing, setInstalling] = useState(false);
   const [canInstall, setCanInstall] = useState(false);
+  const [isiOS, setIsiOS] = useState(false);
 
   useEffect(() => {
     if (!open) return;
+    const ua = navigator.userAgent || '';
+    const iOS = /iPad|iPhone|iPod/.test(ua) || (ua.includes('Mac') && 'ontouchend' in document);
+    setIsiOS(iOS);
     import('@/lib/pwa-install').then(({ canInstallPWA }) => {
       setCanInstall(canInstallPWA());
     });
@@ -35,7 +39,7 @@ const InstallDialog = ({ open, onClose }: InstallDialogProps) => {
     } else if (outcome === 'dismissed') {
       toast.info('Install dismissed. You can try again anytime.');
     } else {
-      toast.info('Your browser doesn't support one-click install here. Follow the steps below.');
+      toast.info("Your browser doesn't support one-click install here. Follow the steps below.");
     }
   };
 
@@ -106,6 +110,33 @@ const InstallDialog = ({ open, onClose }: InstallDialogProps) => {
                   </li>
                 </ol>
               </div>
+
+              {/* iPhone / iPad install instructions */}
+              {isiOS && (
+                <div className="space-y-2 rounded-xl bg-gold/5 border border-gold/20 p-4">
+                  <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <Smartphone className="w-4 h-4 text-gold" />
+                    Install on iPhone / iPad (Safari)
+                  </p>
+                  <ol className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex gap-2">
+                      <span className="text-gold font-bold flex-shrink-0">1.</span>
+                      Tap the <span className="text-foreground font-medium">Share</span> button (square with an up arrow) at the bottom of Safari
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="text-gold font-bold flex-shrink-0">2.</span>
+                      Scroll and choose <span className="text-foreground font-medium">"Add to Home Screen"</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="text-gold font-bold flex-shrink-0">3.</span>
+                      Tap <span className="text-foreground font-medium">Add</span> — Haamkay appears on your home screen like a native app
+                    </li>
+                  </ol>
+                  <p className="text-[11px] text-muted-foreground">
+                    No App Store download needed — this installs the app directly from the website.
+                  </p>
+                </div>
+              )}
 
               {/* Divider */}
               <div className="flex items-center gap-3">

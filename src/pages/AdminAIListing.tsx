@@ -89,13 +89,16 @@ const AdminAIListing = () => {
     }
 
     const results = (data?.results ?? []) as Array<{ image: string; draft?: Draft; error?: string }>;
+    const succeeded = results.filter(r => r.draft).length;
     setDrafts(prev => prev.map(d => {
       const match = results.find(r => r.image === d.image);
-      if (!match) return d.status === 'analyzing' ? { ...d, status: 'pending' } : d;
+      if (!match) return d.status === 'analyzing' ? { ...d, status: 'pending', error: undefined } : d;
       if (!match.draft) return { ...d, status: 'error', error: match.error ?? 'No result' };
-      return { ...d, ...match.draft, status: 'ready' };
+      // Clear any stale error from a previous failed run on success
+      return { ...d, ...match.draft, status: 'ready', error: undefined };
     }));
-    toast.success('AI listings ready — review and send to the approval queue.');
+    if (succeeded) toast.success('AI listings ready — review and send to the approval queue.');
+    else toast.error('AI could not analyze the photos. Please try again.');
   };
 
   const update = (index: number, patch: Partial<Draft>) =>
@@ -181,58 +184,87 @@ const AdminAIListing = () => {
                   </div>
                 )}
                 {d.status === 'published' && (
-                  <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-gold text-teal-darker text-xs font-semibold">In queue</div>
+                  <div className="absolute inset-0 bg-teal-darker/70 flex flex-col items-center justify-center gap-1 text-center px-3">
+                    <Check className="w-7 h-7 text-gold" />
+                    <p className="text-sm font-semibold text-gold">Sent to approval queue</p>
+                  </div>
                 )}
               </div>
 
-              <input
-                value={d.name}
-                onChange={e => update(i, { name: e.target.value })}
-                placeholder="Product name"
-                className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground"
-              />
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  value={d.category}
-                  onChange={e => update(i, { category: e.target.value })}
-                  placeholder="Category"
-                  list="admin-categories"
-                  className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground"
-                />
-                <input
-                  type="number"
-                  value={d.price}
-                  onChange={e => update(i, { price: Number(e.target.value) })}
-                  placeholder="Price (Le)"
-                  className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground"
-                />
-              </div>
-              <textarea
-                value={d.description}
-                onChange={e => update(i, { description: e.target.value })}
-                placeholder="Description"
-                rows={3}
-                className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground"
-              />
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  value={d.stock}
-                  onChange={e => update(i, { stock: Number(e.target.value) })}
-                  className="w-20 bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground"
-                />
-                <button
-                  onClick={() => publish(i)}
-                  disabled={d.status === 'published'}
-                  className="flex-1 btn-gold !py-2 text-sm flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  <Check className="w-4 h-4" /> Send to queue
-                </button>
-                <button onClick={() => remove(i)} className="p-2 rounded-lg text-muted-foreground hover:text-destructive">
+              {/* Status pill */}
+              <div className="flex items-center justify-between">
+                <span className={`text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full ${
+                  d.status === 'ready' ? 'bg-green-500/15 text-green-400' :
+                  d.status === 'error' ? 'bg-destructive/15 text-destructive' :
+                  d.status === 'published' ? 'bg-gold/15 text-gold' :
+                  d.status === 'analyzing' ? 'bg-blue-500/15 text-blue-400' :
+                  'bg-muted text-muted-foreground'
+                }`}>
+                  {d.status === 'ready' ? 'Ready' :
+                   d.status === 'error' ? 'Error' :
+                   d.status === 'published' ? 'In queue' :
+                   d.status === 'analyzing' ? 'Analyzing' :
+                   'Pending'}
+                </span>
+                <button onClick={() => remove(i)} className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive transition-colors" aria-label="Remove">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
-              {d.error && <p className="text-xs text-destructive">{d.error}</p>}
+
+              {d.status === 'published' ? (
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground truncate">{d.name || 'Untitled product'}</p>
+                  <p className="text-xs text-muted-foreground">{d.category} · Le {d.price.toLocaleString()}</p>
+                </div>
+              ) : (
+                <>
+                  <input
+                    value={d.name}
+                    onChange={e => update(i, { name: e.target.value })}
+                    placeholder="Product name"
+                    className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      value={d.category}
+                      onChange={e => update(i, { category: e.target.value })}
+                      placeholder="Category"
+                      list="admin-categories"
+                      className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground"
+                    />
+                    <input
+                      type="number"
+                      value={d.price}
+                      onChange={e => update(i, { price: Number(e.target.value) })}
+                      placeholder="Price (Le)"
+                      className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground"
+                    />
+                  </div>
+                  <textarea
+                    value={d.description}
+                    onChange={e => update(i, { description: e.target.value })}
+                    placeholder="Description"
+                    rows={3}
+                    className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground"
+                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={d.stock}
+                      onChange={e => update(i, { stock: Number(e.target.value) })}
+                      className="w-16 bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground"
+                    />
+                    <button
+                      onClick={() => publish(i)}
+                      disabled={d.status !== 'ready'}
+                      className="flex-1 btn-gold !py-2 text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      <Check className="w-4 h-4" /> Send to queue
+                    </button>
+                  </div>
+                  {d.error && <p className="text-xs text-destructive">{d.error}</p>}
+                </>
+              )}
             </motion.div>
           ))}
         </div>
