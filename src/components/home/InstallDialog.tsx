@@ -35,7 +35,7 @@ const InstallDialog = ({ open, onClose }: InstallDialogProps) => {
     } else if (outcome === 'dismissed') {
       toast.info('Install dismissed. You can try again anytime.');
     } else {
-      toast.info('Your browser doesn't support one-click install here. Follow the steps below.');
+      toast.info("Your browser doesn't support one-click install here. Follow the steps below.");
     }
   };
 
