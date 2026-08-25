@@ -1,0 +1,15 @@
+appId: com.haamkay.desktop
+productName: Haamkay
+copyright: Copyright © 2026 Haamkay Enterprises
+directories:
+  output: release
+  buildResources: build
+files:
+  - electron/**/*
+  - dist/**/*
+  - package.json
+win:
+  target:
+    - dir
+  icon: build/icon.png
+  signAndEditExecutable: false
