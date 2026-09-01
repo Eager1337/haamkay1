@@ -255,6 +255,92 @@ export type Database = {
           },
         ]
       }
+      order_items: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          name: string
+          order_id: string
+          price: number
+          product_id: string | null
+          quantity: number
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name: string
+          order_id: string
+          price?: number
+          product_id?: string | null
+          quantity?: number
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          order_id?: string
+          price?: number
+          product_id?: string | null
+          quantity?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          address: string | null
+          created_at: string
+          customer_name: string
+          guest_token: string
+          id: string
+          note: string | null
+          order_number: string
+          phone: string
+          status: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          customer_name: string
+          guest_token: string
+          id?: string
+          note?: string | null
+          order_number: string
+          phone: string
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          customer_name?: string
+          guest_token?: string
+          id?: string
+          note?: string | null
+          order_number?: string
+          phone?: string
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       price_history: {
         Row: {
           changed_at: string

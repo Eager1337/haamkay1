@@ -94,3 +94,51 @@ export function buildCartMessage(items: WaCartItem[], total: number) {
     'Please confirm my order and delivery details. Thank you!',
   ].join('\n');
 }
+
+export interface WaOrder {
+  order_number: string;
+  customer_name: string;
+  phone: string;
+  address?: string | null;
+  note?: string | null;
+  total: number;
+  order_items: Array<{
+    product_id?: string | null;
+    name: string;
+    price: number;
+    quantity: number;
+    image_url?: string | null;
+  }>;
+}
+
+/** Draft for a confirmed order — photos, links and delivery details included. */
+export function buildOrderMessage(order: WaOrder) {
+  const lines = order.order_items.map((item, i) => {
+    const photo = absolute(item.image_url);
+    const link = item.product_id && typeof window !== 'undefined'
+      ? `${window.location.origin}/product/${item.product_id}`
+      : null;
+    return [
+      `${i + 1}. *${item.name}* × ${item.quantity} — ${money(item.price * item.quantity)}`,
+      photo ? `   📸 ${photo}` : null,
+      link ? `   🔗 ${link}` : null,
+    ].filter(Boolean).join('\n');
+  });
+
+  return [
+    '🛍️ *New order — Haamkay Enterprises*',
+    `Order: *${order.order_number}*`,
+    '',
+    ...lines,
+    '',
+    `*Total: ${money(order.total)}*`,
+    '',
+    `👤 ${order.customer_name}`,
+    `📞 ${order.phone}`,
+    order.address ? `📍 ${order.address}` : null,
+    order.note ? `📝 ${order.note}` : null,
+    '',
+    'Please confirm my order and delivery. Thank you!',
+  ].filter(Boolean).join('\n');
+}
+
