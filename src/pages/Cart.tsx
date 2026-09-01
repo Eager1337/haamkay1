@@ -1,17 +1,24 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ShoppingBag, Minus, Plus, Trash2, ArrowLeft, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import { openWhatsApp, buildCartMessage } from '@/lib/whatsapp';
+import CheckoutDialog from '@/components/CheckoutDialog';
 
 const Cart = () => {
-  const { items, removeFromCart, updateQuantity, totalPrice } = useCart();
+  const { items, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
-  const handleWhatsAppCheckout = () => {
-    openWhatsApp(buildCartMessage(items, totalPrice));
-  };
+  const orderItems = items.map((item) => ({
+    product_id: item.product_id,
+    name: item.product?.name ?? 'Product',
+    price: item.product?.price ?? 0,
+    quantity: item.quantity,
+    image_url: item.product?.images?.[0] ?? null,
+  }));
+
 
   return (
     <div className="min-h-screen bg-background">
