@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, Star, Eye, Copy, Trash2 } from 'lucide-react';
+import { Search, Star, Eye, Copy, Trash2, CheckSquare, Square } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AdminLayout } from '@/components/admin/AdminLayout';
@@ -23,6 +23,42 @@ const AdminProducts = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [selected, setSelected] = useState<string[]>([]);
+  const [bulkPrice, setBulkPrice] = useState('');
+  const [bulkMode, setBulkMode] = useState<'set' | 'percent'>('set');
+
+  const toggleSelected = (id: string) =>
+    setSelected(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
+
+  const bulkDelete = async () => {
+    if (!confirm(`Delete ${selected.length} products?`)) return;
+    const { error } = await supabase.from('products').delete().in('id', selected);
+    if (error) return toast.error(error.message);
+    toast.success(`${selected.length} products deleted`);
+    setSelected([]);
+    fetchData();
+  };
+
+  const bulkUpdatePrice = async () => {
+    const value = Number(bulkPrice);
+    if (!value && value !== 0) return toast.error('Enter a value first');
+    const targets = products.filter(p => selected.includes(p.id));
+    const results = await Promise.all(
+      targets.map(p =>
+        supabase
+          .from('products')
+          .update({ price: bulkMode === 'set' ? value : Math.max(0, Math.round(p.price * (1 + value / 100))) })
+          .eq('id', p.id),
+      ),
+    );
+    const failed = results.filter(r => r.error).length;
+    if (failed) toast.error(`${failed} products failed to update`);
+    else toast.success(`Prices updated for ${targets.length} products`);
+    setBulkPrice('');
+    setSelected([]);
+    fetchData();
+  };
+
 
   useEffect(() => {
     fetchData();
@@ -127,6 +163,50 @@ const AdminProducts = () => {
         </select>
       </div>
 
+      {selected.length > 0 && (
+        <div className="card-luxury p-4 mb-6 flex flex-wrap items-center gap-3">
+          <span className="text-sm text-gold font-medium">{selected.length} selected</span>
+          <select
+            value={bulkMode}
+            onChange={e => setBulkMode(e.target.value as 'set' | 'percent')}
+            className="bg-muted border border-border rounded-lg px-3 py-2 text-sm"
+          >
+            <option value="set">Set price to</option>
+            <option value="percent">Change by %</option>
+          </select>
+          <input
+            type="number"
+            value={bulkPrice}
+            onChange={e => setBulkPrice(e.target.value)}
+            placeholder={bulkMode === 'set' ? 'New price (Le)' : 'e.g. -10'}
+            className="bg-muted border border-border rounded-lg px-3 py-2 text-sm w-40"
+          />
+          <button onClick={bulkUpdatePrice} className="btn-gold !py-2 !px-4 text-sm">Apply prices</button>
+          <button onClick={bulkDelete} className="px-4 py-2 rounded-lg text-sm bg-destructive/20 text-destructive hover:bg-destructive/30">
+            Delete selected
+          </button>
+          <button onClick={() => setSelected([])} className="text-sm text-muted-foreground hover:text-foreground ml-auto">
+            Clear
+          </button>
+        </div>
+      )}
+
+      <div className="mb-4">
+        <button
+          onClick={() =>
+            setSelected(selected.length === filteredProducts.length ? [] : filteredProducts.map(p => p.id))
+          }
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-gold"
+        >
+          {selected.length === filteredProducts.length && filteredProducts.length > 0 ? (
+            <CheckSquare className="w-4 h-4" />
+          ) : (
+            <Square className="w-4 h-4" />
+          )}
+          Select all ({filteredProducts.length})
+        </button>
+      </div>
+
       {/* Products Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredProducts.map(product => (
@@ -137,6 +217,13 @@ const AdminProducts = () => {
             className="card-luxury overflow-hidden group"
           >
             <div className="relative aspect-square mb-4 rounded-lg overflow-hidden">
+              <button
+                onClick={() => toggleSelected(product.id)}
+                className="absolute top-2 right-2 z-10 p-1.5 rounded-md bg-background/80 text-foreground hover:text-gold"
+                aria-label="Select product"
+              >
+                {selected.includes(product.id) ? <CheckSquare className="w-4 h-4 text-gold" /> : <Square className="w-4 h-4" />}
+              </button>
               <img
                 src={product.images?.[0] || '/placeholder.svg'}
                 alt={product.name}
