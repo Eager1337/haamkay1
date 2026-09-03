@@ -102,12 +102,21 @@ const Header = () => {
                 <span className="text-sm">+232 76 682 626</span>
               </a>
               
+              <Link to="/wishlist" className="p-2 text-foreground/80 hover:text-gold transition-colors" aria-label="Wishlist">
+                <Heart className="w-5 h-5" />
+              </Link>
+
+              <Link to="/my-orders" className="p-2 text-foreground/80 hover:text-gold transition-colors" aria-label="My orders">
+                <PackageSearch className="w-5 h-5" />
+              </Link>
+
               <Link to="/cart" className="relative p-2 text-foreground/80 hover:text-gold transition-colors">
                 <ShoppingBag className="w-5 h-5" />
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-gold text-teal-darker text-xs rounded-full flex items-center justify-center font-medium">
                   {totalItems}
                 </span>
               </Link>
+
             </div>
           </div>
         </div>
