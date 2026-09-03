@@ -47,6 +47,7 @@ const ProductDetail = () => {
       
       if (data) {
         setProduct(data);
+        setSaved(inWishlist(data.id));
         const { data: related } = await supabase
           .from('products')
           .select('*')
