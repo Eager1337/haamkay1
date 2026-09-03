@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ShoppingBag, Minus, Plus, Trash2, ArrowLeft, MessageCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -10,6 +10,7 @@ import CheckoutDialog from '@/components/CheckoutDialog';
 const Cart = () => {
   const { items, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const navigate = useNavigate();
 
   const orderItems = items.map((item) => ({
     product_id: item.product_id,
@@ -140,7 +141,7 @@ const Cart = () => {
                   </div>
 
                   <button
-                    onClick={handleWhatsAppCheckout}
+                    onClick={() => setCheckoutOpen(true)}
                     className="w-full btn-gold py-4 flex items-center justify-center gap-2"
                   >
                     <MessageCircle className="w-5 h-5" />
@@ -157,6 +158,15 @@ const Cart = () => {
         </div>
       </main>
       <Footer />
+      <CheckoutDialog
+        open={checkoutOpen}
+        onClose={() => setCheckoutOpen(false)}
+        items={orderItems}
+        onPlaced={() => {
+          clearCart();
+          navigate('/my-orders');
+        }}
+      />
     </div>
   );
 };
