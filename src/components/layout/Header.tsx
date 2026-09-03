@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, Phone, ShoppingBag, Menu, X } from 'lucide-react';
+import { Search, Phone, ShoppingBag, Menu, X, Heart, PackageSearch } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/contexts/CartContext';
 import NotificationBell from '@/components/NotificationBell';
@@ -102,12 +102,21 @@ const Header = () => {
                 <span className="text-sm">+232 76 682 626</span>
               </a>
               
+              <Link to="/wishlist" className="p-2 text-foreground/80 hover:text-gold transition-colors" aria-label="Wishlist">
+                <Heart className="w-5 h-5" />
+              </Link>
+
+              <Link to="/my-orders" className="p-2 text-foreground/80 hover:text-gold transition-colors" aria-label="My orders">
+                <PackageSearch className="w-5 h-5" />
+              </Link>
+
               <Link to="/cart" className="relative p-2 text-foreground/80 hover:text-gold transition-colors">
                 <ShoppingBag className="w-5 h-5" />
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-gold text-teal-darker text-xs rounded-full flex items-center justify-center font-medium">
                   {totalItems}
                 </span>
               </Link>
+
             </div>
           </div>
         </div>
@@ -138,6 +147,20 @@ const Header = () => {
                     {link.name}
                   </Link>
                 ))}
+                <Link
+                  to="/wishlist"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="py-3 px-4 rounded-lg text-base font-medium text-foreground/80 hover:bg-muted"
+                >
+                  My Wishlist
+                </Link>
+                <Link
+                  to="/my-orders"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="py-3 px-4 rounded-lg text-base font-medium text-foreground/80 hover:bg-muted"
+                >
+                  My Orders
+                </Link>
                 <Link
                   to="/cart"
                   onClick={() => setIsMobileMenuOpen(false)}
