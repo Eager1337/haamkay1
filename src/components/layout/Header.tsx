@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, Phone, ShoppingBag, Menu, X } from 'lucide-react';
+import { Search, Phone, ShoppingBag, Menu, X, Heart, PackageSearch } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/contexts/CartContext';
 import NotificationBell from '@/components/NotificationBell';
@@ -147,6 +147,20 @@ const Header = () => {
                     {link.name}
                   </Link>
                 ))}
+                <Link
+                  to="/wishlist"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="py-3 px-4 rounded-lg text-base font-medium text-foreground/80 hover:bg-muted"
+                >
+                  My Wishlist
+                </Link>
+                <Link
+                  to="/my-orders"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="py-3 px-4 rounded-lg text-base font-medium text-foreground/80 hover:bg-muted"
+                >
+                  My Orders
+                </Link>
                 <Link
                   to="/cart"
                   onClick={() => setIsMobileMenuOpen(false)}

@@ -5,6 +5,7 @@ import { ArrowLeft, Star, ShieldCheck, Heart, Share2, ChevronLeft, ChevronRight,
 import { supabase } from '@/integrations/supabase/client';
 import { useCart } from '@/contexts/CartContext';
 import { openWhatsApp, buildProductMessage } from '@/lib/whatsapp';
+import { inWishlist, toggleWishlist } from '@/lib/wishlist';
 import TikTokEmbed from '@/components/TikTokEmbed';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -32,6 +33,7 @@ const ProductDetail = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [quantity, setQuantity] = useState(1);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -253,9 +255,22 @@ const ProductDetail = () => {
               </div>
 
               <div className="hidden md:flex gap-3 pt-2">
-                <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-gold transition-colors">
-                  <Heart className="w-4 h-4" />
-                  Add to Wishlist
+                <button
+                  onClick={() => {
+                    if (!product) return;
+                    const now = toggleWishlist({
+                      id: product.id,
+                      name: product.name,
+                      price: product.price,
+                      image: product.images?.[0] ?? null,
+                      category: product.category,
+                    });
+                    setSaved(now);
+                  }}
+                  className={`flex items-center gap-2 text-sm transition-colors ${saved ? 'text-gold' : 'text-muted-foreground hover:text-gold'}`}
+                >
+                  <Heart className={`w-4 h-4 ${saved ? 'fill-gold' : ''}`} />
+                  {saved ? 'Saved to Wishlist' : 'Add to Wishlist'}
                 </button>
                 <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-gold transition-colors">
                   <Share2 className="w-4 h-4" />
