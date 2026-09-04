@@ -28,6 +28,8 @@ import AdminCsvImport from "./pages/AdminCsvImport";
 import AdminPriceHistory from "./pages/AdminPriceHistory";
 import AdminTikTok from "./pages/AdminTikTok";
 import AdminSiteContent from "./pages/AdminSiteContent";
+import AdminImageUpscaler from "./pages/AdminImageUpscaler";
+import AdminDuplicateProducts from "./pages/AdminDuplicateProducts";
 import NotificationToaster from "./components/NotificationToaster";
 
 import ProductDetail from "./pages/ProductDetail";

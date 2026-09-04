@@ -26,6 +26,7 @@ const Wishlist = () => {
       <Seo
         title="My Wishlist | Haamkay Enterprises"
         description="Everything you saved for later at Haamkay Enterprises — keep your favourite pieces in one place and order when you are ready."
+        path="/wishlist"
       />
       <Header />
       <main className="pt-28 md:pt-40 pb-32 md:pb-20">
