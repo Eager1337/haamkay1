@@ -3,9 +3,10 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   LayoutDashboard, FolderOpen, ShoppingCart, BarChart3, Settings, Users,
-  Package, LogOut, Save, Globe, Phone, Mail, MapPin, Layers
+  Package, LogOut, Save, Globe, Phone, Mail, MapPin, Layers, LineChart, Slack
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const navItems = [
   { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
@@ -31,6 +32,8 @@ const AdminSettings = () => {
     enableNotifications: true,
     enableWhatsappOrders: true,
   });
+  const [gaId, setGaId] = useState('');
+  const [savingGa, setSavingGa] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -40,6 +43,25 @@ const AdminSettings = () => {
     }
   }, [navigate]);
 
+  useEffect(() => {
+    supabase
+      .from('site_settings')
+      .select('value')
+      .eq('key', 'ga_measurement_id')
+      .maybeSingle()
+      .then(({ data }) => setGaId(data?.value ?? ''));
+  }, []);
+
+  const saveGa = async () => {
+    setSavingGa(true);
+    const { error } = await supabase
+      .from('site_settings')
+      .upsert({ key: 'ga_measurement_id', value: gaId.trim() }, { onConflict: 'key' });
+    setSavingGa(false);
+    if (error) return toast.error(error.message);
+    toast.success('Google Analytics ID saved — visits start tracking on next page load.');
+  };
+
   const handleSave = async () => {
     setSaving(true);
     // Simulate save
@@ -47,6 +69,7 @@ const AdminSettings = () => {
     toast.success('Settings saved!');
     setSaving(false);
   };
+
 
   return (
     <div className="min-h-screen bg-background flex">
