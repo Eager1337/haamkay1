@@ -3,9 +3,10 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   LayoutDashboard, FolderOpen, ShoppingCart, BarChart3, Settings, Users,
-  Package, LogOut, Save, Globe, Phone, Mail, MapPin, Layers
+  Package, LogOut, Save, Globe, Phone, Mail, MapPin, Layers, LineChart, Slack
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const navItems = [
   { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
@@ -31,6 +32,8 @@ const AdminSettings = () => {
     enableNotifications: true,
     enableWhatsappOrders: true,
   });
+  const [gaId, setGaId] = useState('');
+  const [savingGa, setSavingGa] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -40,6 +43,25 @@ const AdminSettings = () => {
     }
   }, [navigate]);
 
+  useEffect(() => {
+    supabase
+      .from('site_settings')
+      .select('value')
+      .eq('key', 'ga_measurement_id')
+      .maybeSingle()
+      .then(({ data }) => setGaId(data?.value ?? ''));
+  }, []);
+
+  const saveGa = async () => {
+    setSavingGa(true);
+    const { error } = await supabase
+      .from('site_settings')
+      .upsert({ key: 'ga_measurement_id', value: gaId.trim() }, { onConflict: 'key' });
+    setSavingGa(false);
+    if (error) return toast.error(error.message);
+    toast.success('Google Analytics ID saved — visits start tracking on next page load.');
+  };
+
   const handleSave = async () => {
     setSaving(true);
     // Simulate save
@@ -47,6 +69,7 @@ const AdminSettings = () => {
     toast.success('Settings saved!');
     setSaving(false);
   };
+
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -199,8 +222,47 @@ const AdminSettings = () => {
               </div>
             </div>
           </div>
+
+          {/* Google Analytics */}
+          <div className="card-luxury">
+            <h2 className="text-xl font-serif font-bold text-foreground mb-6 flex items-center gap-2">
+              <LineChart className="w-5 h-5 text-gold" />
+              Visitor Tracking
+            </h2>
+            <label className="block text-sm text-muted-foreground mb-2">Google Analytics Measurement ID</label>
+            <input
+              type="text"
+              value={gaId}
+              onChange={e => setGaId(e.target.value)}
+              placeholder="G-XXXXXXXXXX"
+              className="w-full bg-muted border border-border rounded-lg px-4 py-3 text-foreground"
+            />
+            <p className="text-xs text-muted-foreground mt-2">
+              Find this in your Google Analytics account under Admin → Data streams. Once saved, visits and page views are tracked automatically.
+            </p>
+            <button onClick={saveGa} disabled={savingGa} className="btn-gold mt-4 !py-2 !px-4 inline-flex items-center gap-2">
+              <Save className="w-4 h-4" />
+              {savingGa ? 'Saving...' : 'Save tracking ID'}
+            </button>
+          </div>
+
+          {/* Slack */}
+          <div className="card-luxury">
+            <h2 className="text-xl font-serif font-bold text-foreground mb-6 flex items-center gap-2">
+              <Slack className="w-5 h-5 text-gold" />
+              Team Alerts on Slack
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Your team can get an automatic Slack message whenever a product is updated or flagged as a possible duplicate.
+              The Slack link is kept in secure storage, not on this page, so nobody visiting the site can see it.
+            </p>
+            <p className="text-sm text-muted-foreground mt-3">
+              To turn it on, create an "Incoming Webhook" in your Slack workspace and ask in chat to save it — it gets stored securely for you.
+            </p>
+          </div>
         </div>
       </main>
+
     </div>
   );
 };
