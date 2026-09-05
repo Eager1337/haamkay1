@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, Phone, ShoppingBag, Menu, X, Heart, PackageSearch } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/contexts/CartContext';
@@ -17,10 +17,25 @@ const navLinks = [
 
 const Header = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { totalItems } = useCart();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Always close menus when the page changes so navigation never feels stuck.
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+    setIsSearchOpen(false);
+  }, [location.pathname]);
+
+  const submitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = searchQuery.trim();
+    setIsSearchOpen(false);
+    navigate(q ? `/categories?q=${encodeURIComponent(q)}` : '/categories');
+  };
+
 
   return (
     <motion.header
@@ -201,7 +216,7 @@ const Header = () => {
             exit={{ opacity: 0, y: -20 }}
             className="absolute top-full left-0 right-0 bg-card border-b border-border p-4"
           >
-            <div className="container mx-auto">
+            <form className="container mx-auto" onSubmit={submitSearch}>
               <input
                 type="text"
                 value={searchQuery}
@@ -210,7 +225,7 @@ const Header = () => {
                 className="w-full bg-muted border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold"
                 autoFocus
               />
-            </div>
+            </form>
           </motion.div>
         )}
       </AnimatePresence>

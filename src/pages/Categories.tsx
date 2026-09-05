@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/layout/Header';
@@ -40,9 +41,16 @@ const Categories = () => {
     fetchData();
   }, []);
 
-  const filteredProducts = selectedCategory === 'all' 
-    ? products 
+  const byCategory = selectedCategory === 'all'
+    ? products
     : products.filter(p => p.category === selectedCategory);
+
+  const filteredProducts = query
+    ? byCategory.filter(p =>
+        p.name.toLowerCase().includes(query.toLowerCase()) ||
+        p.category.toLowerCase().includes(query.toLowerCase())
+      )
+    : byCategory;
 
   return (
     <div className="min-h-screen bg-background">
