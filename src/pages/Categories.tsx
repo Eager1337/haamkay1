@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/layout/Header';
@@ -26,6 +27,8 @@ const Categories = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const query = searchParams.get('q') ?? '';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,9 +43,16 @@ const Categories = () => {
     fetchData();
   }, []);
 
-  const filteredProducts = selectedCategory === 'all' 
-    ? products 
+  const byCategory = selectedCategory === 'all'
+    ? products
     : products.filter(p => p.category === selectedCategory);
+
+  const filteredProducts = query
+    ? byCategory.filter(p =>
+        p.name.toLowerCase().includes(query.toLowerCase()) ||
+        p.category.toLowerCase().includes(query.toLowerCase())
+      )
+    : byCategory;
 
   return (
     <div className="min-h-screen bg-background">
@@ -61,6 +71,21 @@ const Categories = () => {
               Explore our curated collection of premium products
             </p>
           </motion.div>
+
+          {query && (
+            <div className="mb-4 flex items-center justify-center gap-3 text-sm">
+              <span className="text-muted-foreground">
+                Results for “{query}” ({filteredProducts.length})
+              </span>
+              <button
+                onClick={() => setSearchParams({})}
+                className="px-3 py-1 rounded-full bg-muted text-foreground hover:bg-gold/20 transition-colors"
+              >
+                Clear
+              </button>
+            </div>
+          )}
+
 
           {/* Category Filter - Horizontal scroll on mobile */}
           <div className="mb-6 md:mb-12 -mx-4 px-4 md:mx-0 md:px-0">

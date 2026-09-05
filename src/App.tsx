@@ -35,6 +35,7 @@ import AdminScheduledAlerts from "./pages/AdminScheduledAlerts";
 import AdminTeam from "./pages/AdminTeam";
 import NotificationToaster from "./components/NotificationToaster";
 import AnalyticsProvider from "./components/AnalyticsProvider";
+import ScrollToTop from "./components/ScrollToTop";
 
 import ProductDetail from "./pages/ProductDetail";
 import Categories from "./pages/Categories";
@@ -59,6 +60,7 @@ const App = () => (
         <AdminAuthProvider>
           <UserProvider>
             <CartProvider>
+              <ScrollToTop />
               <NotificationToaster />
               <AnalyticsProvider />
               <Routes>
