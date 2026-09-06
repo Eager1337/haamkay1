@@ -96,7 +96,7 @@ async function viaGemini(key: string, url: string, categories: string[]) {
             parts: [{ text: userPrompt(categories) }, { inline_data: { mime_type: mime, data: b64 } }],
           },
         ],
-        generationConfig: { responseMimeType: 'application/json', responseSchema: LISTING_SCHEMA },
+        generationConfig: { responseMimeType: 'application/json', responseSchema: GEMINI_SCHEMA },
       }),
     },
   );
