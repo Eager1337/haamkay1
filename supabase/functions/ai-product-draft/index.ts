@@ -28,6 +28,23 @@ const LISTING_SCHEMA = {
   additionalProperties: false,
 };
 
+/** Gemini's responseSchema is a strict OpenAPI subset — it rejects additionalProperties. */
+const GEMINI_SCHEMA = (() => {
+  const strip = (node: unknown): unknown => {
+    if (Array.isArray(node)) return node.map(strip);
+    if (node && typeof node === 'object') {
+      const out: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(node as Record<string, unknown>)) {
+        if (k === 'additionalProperties') continue;
+        out[k] = strip(v);
+      }
+      return out;
+    }
+    return node;
+  };
+  return strip(LISTING_SCHEMA);
+})();
+
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function normalise(raw: Record<string, unknown>) {
