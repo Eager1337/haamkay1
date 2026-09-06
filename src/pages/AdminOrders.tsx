@@ -1,53 +1,85 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  LayoutDashboard, FolderOpen, ShoppingCart, BarChart3, Settings, Users,
-  Package, LogOut, Eye, Clock, CheckCircle, XCircle, Truck, Layers
-} from 'lucide-react';
+import { Clock, Package, Truck, CheckCircle, XCircle, MessageCircle, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { AdminLayout } from '@/components/admin/AdminLayout';
+import { openWhatsApp } from '@/lib/whatsapp';
 
-const navItems = [
-  { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
-  { name: 'Products', path: '/admin/products', icon: Package },
-  { name: 'Categories', path: '/admin/categories', icon: FolderOpen },
-  { name: 'Bulk Upload', path: '/admin/bulk-upload', icon: Layers },
-  { name: 'Orders', path: '/admin/orders', icon: ShoppingCart },
-  { name: 'Analytics', path: '/admin/analytics', icon: BarChart3 },
-  { name: 'Customers', path: '/admin/customers', icon: Users },
-  { name: 'Settings', path: '/admin/settings', icon: Settings },
-];
+interface OrderItemRow {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  image_url: string | null;
+  status: string;
+}
 
-// Mock orders data
-const mockOrders = [
-  { id: 'ORD-001', customer: 'John Doe', email: 'john@example.com', total: 250000, status: 'pending', date: '2024-01-08' },
-  { id: 'ORD-002', customer: 'Jane Smith', email: 'jane@example.com', total: 180000, status: 'processing', date: '2024-01-07' },
-  { id: 'ORD-003', customer: 'Mike Johnson', email: 'mike@example.com', total: 320000, status: 'shipped', date: '2024-01-06' },
-  { id: 'ORD-004', customer: 'Sarah Williams', email: 'sarah@example.com', total: 150000, status: 'delivered', date: '2024-01-05' },
-  { id: 'ORD-005', customer: 'Tom Brown', email: 'tom@example.com', total: 95000, status: 'cancelled', date: '2024-01-04' },
-];
+interface OrderRow {
+  id: string;
+  order_number: string;
+  customer_name: string;
+  phone: string;
+  address: string | null;
+  note: string | null;
+  total: number;
+  status: string;
+  created_at: string;
+  order_items: OrderItemRow[];
+}
 
-const statusConfig = {
+const statusConfig: Record<string, { icon: typeof Clock; color: string; bg: string }> = {
   pending: { icon: Clock, color: 'text-yellow-500', bg: 'bg-yellow-500/20' },
-  processing: { icon: Package, color: 'text-blue-500', bg: 'bg-blue-500/20' },
-  shipped: { icon: Truck, color: 'text-purple-500', bg: 'bg-purple-500/20' },
+  processing: { icon: Package, color: 'text-blue-400', bg: 'bg-blue-400/20' },
+  shipped: { icon: Truck, color: 'text-purple-400', bg: 'bg-purple-400/20' },
   delivered: { icon: CheckCircle, color: 'text-green-500', bg: 'bg-green-500/20' },
   cancelled: { icon: XCircle, color: 'text-red-500', bg: 'bg-red-500/20' },
 };
 
+const STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+const money = (n: number) => `Le ${Math.round(n).toLocaleString()}`;
+
 const AdminOrders = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [orders] = useState(mockOrders);
+  const [orders, setOrders] = useState<OrderRow[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
 
-  useEffect(() => {
-    if (sessionStorage.getItem('adminAuth') !== 'true') {
-      navigate('/admin');
-      return;
-    }
-  }, [navigate]);
+  const fetchOrders = async () => {
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*, order_items(*)')
+      .order('created_at', { ascending: false });
+    if (error) toast.error(error.message);
+    setOrders((data as OrderRow[]) ?? []);
+    setLoading(false);
+  };
 
-  const filteredOrders = filterStatus === 'all' ? orders : orders.filter(o => o.status === filterStatus);
+  useEffect(() => {
+    fetchOrders();
+    const channel = supabase
+      .channel('admin-orders')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, fetchOrders)
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const setOrderStatus = async (order: OrderRow, status: string) => {
+    const { error } = await supabase.from('orders').update({ status }).eq('id', order.id);
+    if (error) return toast.error(error.message);
+    await supabase.from('order_items').update({ status }).eq('order_id', order.id);
+    toast.success(`${order.order_number} marked ${status}`);
+    fetchOrders();
+  };
+
+  const setItemStatus = async (item: OrderItemRow, status: string) => {
+    const { error } = await supabase.from('order_items').update({ status }).eq('id', item.id);
+    if (error) return toast.error(error.message);
+    fetchOrders();
+  };
+
+  const filtered = filterStatus === 'all' ? orders : orders.filter(o => o.status === filterStatus);
 
   const stats = {
     total: orders.length,
@@ -57,133 +89,126 @@ const AdminOrders = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-card border-r border-border p-6 flex flex-col">
-        <div className="mb-8">
-          <h1 className="text-xl font-serif font-bold text-gold">Haamkay Admin</h1>
-        </div>
-        <nav className="flex-1 space-y-2">
-          {navItems.map(item => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                location.pathname === item.path
-                  ? 'bg-gold/20 text-gold'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-              }`}
-            >
-              <item.icon className="w-5 h-5" />
-              {item.name}
-            </Link>
-          ))}
-        </nav>
-        <button
-          onClick={() => { sessionStorage.removeItem('adminAuth'); navigate('/'); }}
-          className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-destructive/20 hover:text-destructive transition-colors"
-        >
-          <LogOut className="w-5 h-5" />
-          Logout
+    <AdminLayout
+      title="Orders"
+      subtitle={loading ? 'Loading orders...' : `${orders.length} orders received`}
+      actions={
+        <button onClick={fetchOrders} className="btn-outline-gold !py-2 !px-4 flex items-center gap-2">
+          <RefreshCw className="w-4 h-4" />
+          Refresh
         </button>
-      </aside>
+      }
+    >
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        {Object.entries(stats).map(([label, value]) => (
+          <div key={label} className="card-luxury p-4">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
+            <p className="text-2xl font-bold text-gold">{value}</p>
+          </div>
+        ))}
+      </div>
 
-      {/* Main Content */}
-      <main className="flex-1 p-8 overflow-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-serif font-bold text-foreground">Orders</h1>
-          <p className="text-muted-foreground">Manage customer orders</p>
-        </div>
+      <div className="flex flex-wrap gap-2 mb-6">
+        {['all', ...STATUSES].map(status => (
+          <button
+            key={status}
+            onClick={() => setFilterStatus(status)}
+            className={`px-4 py-2 rounded-lg text-sm capitalize transition-colors ${
+              filterStatus === status ? 'bg-gold/20 text-gold' : 'bg-muted text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {status}
+          </button>
+        ))}
+      </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
-          <div className="card-luxury p-4">
-            <ShoppingCart className="w-6 h-6 text-gold mb-2" />
-            <div className="text-2xl font-bold text-foreground">{stats.total}</div>
-            <div className="text-muted-foreground text-sm">Total Orders</div>
-          </div>
-          <div className="card-luxury p-4">
-            <Clock className="w-6 h-6 text-yellow-500 mb-2" />
-            <div className="text-2xl font-bold text-foreground">{stats.pending}</div>
-            <div className="text-muted-foreground text-sm">Pending</div>
-          </div>
-          <div className="card-luxury p-4">
-            <Package className="w-6 h-6 text-blue-500 mb-2" />
-            <div className="text-2xl font-bold text-foreground">{stats.processing}</div>
-            <div className="text-muted-foreground text-sm">Processing</div>
-          </div>
-          <div className="card-luxury p-4">
-            <CheckCircle className="w-6 h-6 text-green-500 mb-2" />
-            <div className="text-2xl font-bold text-foreground">{stats.delivered}</div>
-            <div className="text-muted-foreground text-sm">Delivered</div>
-          </div>
-        </div>
+      {!loading && filtered.length === 0 && (
+        <p className="text-muted-foreground">No orders here yet.</p>
+      )}
 
-        {/* Filter */}
-        <div className="flex gap-2 mb-6">
-          {['all', 'pending', 'processing', 'shipped', 'delivered', 'cancelled'].map(status => (
-            <button
-              key={status}
-              onClick={() => setFilterStatus(status)}
-              className={`px-4 py-2 rounded-lg capitalize transition-colors ${
-                filterStatus === status
-                  ? 'bg-gold text-teal-darker'
-                  : 'bg-muted text-muted-foreground hover:text-foreground'
-              }`}
+      <div className="space-y-4">
+        {filtered.map(order => {
+          const s = statusConfig[order.status] ?? statusConfig.pending;
+          const Icon = s.icon;
+          return (
+            <motion.div
+              key={order.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="card-luxury p-5"
             >
-              {status}
-            </button>
-          ))}
-        </div>
+              <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+                <div>
+                  <p className="font-semibold text-foreground">{order.order_number}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {order.customer_name} — {order.phone}
+                  </p>
+                  {order.address && <p className="text-xs text-muted-foreground">{order.address}</p>}
+                  {order.note && <p className="text-xs text-muted-foreground italic">“{order.note}”</p>}
+                  <p className="text-xs text-muted-foreground mt-1">{new Date(order.created_at).toLocaleString()}</p>
+                </div>
+                <div className="text-right">
+                  <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm capitalize ${s.bg} ${s.color}`}>
+                    <Icon className="w-4 h-4" />
+                    {order.status}
+                  </span>
+                  <p className="text-gold font-bold mt-2">{money(order.total)}</p>
+                </div>
+              </div>
 
-        {/* Orders Table */}
-        <div className="card-luxury overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-muted">
-              <tr>
-                <th className="p-4 text-left text-foreground">Order ID</th>
-                <th className="p-4 text-left text-foreground">Customer</th>
-                <th className="p-4 text-left text-foreground">Total</th>
-                <th className="p-4 text-left text-foreground">Status</th>
-                <th className="p-4 text-left text-foreground">Date</th>
-                <th className="p-4 text-right text-foreground">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredOrders.map(order => {
-                const StatusIcon = statusConfig[order.status as keyof typeof statusConfig].icon;
-                return (
-                  <tr key={order.id} className="border-t border-border">
-                    <td className="p-4 text-gold font-medium">{order.id}</td>
-                    <td className="p-4">
-                      <div className="text-foreground">{order.customer}</div>
-                      <div className="text-sm text-muted-foreground">{order.email}</div>
-                    </td>
-                    <td className="p-4 text-foreground font-semibold">Le {order.total.toLocaleString()}</td>
-                    <td className="p-4">
-                      <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm ${statusConfig[order.status as keyof typeof statusConfig].bg} ${statusConfig[order.status as keyof typeof statusConfig].color}`}>
-                        <StatusIcon className="w-4 h-4" />
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="p-4 text-muted-foreground">{order.date}</td>
-                    <td className="p-4 text-right">
-                      <button className="p-2 text-muted-foreground hover:text-gold">
-                        <Eye className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+              <div className="space-y-2 mb-4">
+                {order.order_items?.map(item => (
+                  <div key={item.id} className="flex items-center gap-3">
+                    {item.image_url && (
+                      <img src={item.image_url} alt={item.name} className="w-12 h-14 object-cover rounded-lg" loading="lazy" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-foreground line-clamp-1">{item.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        × {item.quantity} — {money(item.price * item.quantity)}
+                      </p>
+                    </div>
+                    <select
+                      value={item.status}
+                      onChange={e => setItemStatus(item, e.target.value)}
+                      className="bg-muted border border-border rounded-lg px-2 py-1 text-xs capitalize"
+                    >
+                      {STATUSES.map(st => <option key={st} value={st}>{st}</option>)}
+                    </select>
+                  </div>
+                ))}
+              </div>
 
-        <div className="mt-6 text-center text-muted-foreground text-sm">
-          <p>This is demo data. Connect to a real order management system for live orders.</p>
-        </div>
-      </main>
-    </div>
+              <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-border">
+                {STATUSES.map(st => (
+                  <button
+                    key={st}
+                    onClick={() => setOrderStatus(order, st)}
+                    className={`px-3 py-1.5 rounded-lg text-xs capitalize transition-colors ${
+                      order.status === st ? 'bg-gold/20 text-gold' : 'bg-muted text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Mark {st}
+                  </button>
+                ))}
+                <button
+                  onClick={() =>
+                    openWhatsApp(
+                      `Hello ${order.customer_name}, this is Haamkay Enterprises about your order ${order.order_number} (${money(order.total)}).`,
+                      order.phone,
+                    )
+                  }
+                  className="ml-auto inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-gold"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Message customer
+                </button>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+    </AdminLayout>
   );
 };
 

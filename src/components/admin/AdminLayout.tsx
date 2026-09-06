@@ -3,7 +3,8 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, FolderOpen, ShoppingCart, BarChart3, Settings, Users,
   Package, LogOut, Layers, Sparkles, Bell, Images, CalendarClock, Boxes, Menu, X,
-  Inbox, FileSpreadsheet, History, Music2, ExternalLink, MessageSquareQuote
+  Inbox, FileSpreadsheet, History, Music2, ExternalLink, MessageSquareQuote,
+  ZoomIn, Copy, Wand2, AlarmClock, UserSquare2
 } from 'lucide-react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
@@ -16,6 +17,7 @@ const navGroups = [
       { name: 'Categories', path: '/admin/categories', icon: FolderOpen },
       { name: 'Inventory', path: '/admin/inventory', icon: Boxes },
       { name: 'Price History', path: '/admin/price-history', icon: History },
+      { name: 'Duplicate Products', path: '/admin/duplicate-products', icon: Copy },
     ],
   },
   {
@@ -26,15 +28,19 @@ const navGroups = [
       { name: 'Bulk Upload', path: '/admin/bulk-upload', icon: Layers },
       { name: 'CSV Import', path: '/admin/csv-import', icon: FileSpreadsheet },
       { name: 'Media Library', path: '/admin/media', icon: Images },
+      { name: 'Image Upscaler', path: '/admin/image-upscaler', icon: ZoomIn },
+      { name: 'AI Image Studio', path: '/admin/image-studio', icon: Wand2 },
       { name: 'TikTok', path: '/admin/tiktok', icon: Music2 },
       { name: 'Drops & Prices', path: '/admin/schedule', icon: CalendarClock },
       { name: 'Site Content', path: '/admin/site-content', icon: MessageSquareQuote },
+      { name: 'Team & About', path: '/admin/team', icon: UserSquare2 },
     ],
   },
   {
     label: 'Engage',
     items: [
       { name: 'Notifications', path: '/admin/notifications', icon: Bell },
+      { name: 'Scheduled Alerts', path: '/admin/scheduled-alerts', icon: AlarmClock },
       { name: 'Orders', path: '/admin/orders', icon: ShoppingCart },
       { name: 'Customers', path: '/admin/customers', icon: Users },
       { name: 'Analytics', path: '/admin/analytics', icon: BarChart3 },
@@ -42,6 +48,7 @@ const navGroups = [
     ],
   },
 ];
+
 
 interface AdminLayoutProps {
   children: React.ReactNode;

@@ -28,7 +28,14 @@ import AdminCsvImport from "./pages/AdminCsvImport";
 import AdminPriceHistory from "./pages/AdminPriceHistory";
 import AdminTikTok from "./pages/AdminTikTok";
 import AdminSiteContent from "./pages/AdminSiteContent";
+import AdminImageUpscaler from "./pages/AdminImageUpscaler";
+import AdminDuplicateProducts from "./pages/AdminDuplicateProducts";
+import AdminImageStudio from "./pages/AdminImageStudio";
+import AdminScheduledAlerts from "./pages/AdminScheduledAlerts";
+import AdminTeam from "./pages/AdminTeam";
 import NotificationToaster from "./components/NotificationToaster";
+import AnalyticsProvider from "./components/AnalyticsProvider";
+import ScrollToTop from "./components/ScrollToTop";
 
 import ProductDetail from "./pages/ProductDetail";
 import Categories from "./pages/Categories";
@@ -36,6 +43,10 @@ import DailyDrops from "./pages/DailyDrops";
 import Trending from "./pages/Trending";
 import OurStory from "./pages/OurStory";
 import Contact from "./pages/Contact";
+import Wishlist from "./pages/Wishlist";
+import MyOrders from "./pages/MyOrders";
+import CategoryLanding from "./components/seo/CategoryLanding";
+import { landingConfigs } from "./pages/landing/landingConfigs";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -49,7 +60,9 @@ const App = () => (
         <AdminAuthProvider>
           <UserProvider>
             <CartProvider>
+              <ScrollToTop />
               <NotificationToaster />
+              <AnalyticsProvider />
               <Routes>
                 {/* Public Pages */}
                 <Route path="/" element={<Index />} />
@@ -61,7 +74,18 @@ const App = () => (
                 <Route path="/our-story" element={<OurStory />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/cart" element={<Cart />} />
-                
+                <Route path="/wishlist" element={<Wishlist />} />
+                <Route path="/my-orders" element={<MyOrders />} />
+
+                {/* SEO landing pages */}
+                {landingConfigs.map(config => (
+                  <Route
+                    key={config.slug}
+                    path={`/${config.slug}`}
+                    element={<CategoryLanding config={config} />}
+                  />
+                ))}
+
                 {/* Admin Pages */}
                 <Route path="/admin" element={<AdminLogin />} />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
@@ -76,6 +100,11 @@ const App = () => (
                 <Route path="/admin/price-history" element={<AdminPriceHistory />} />
                 <Route path="/admin/tiktok" element={<AdminTikTok />} />
                 <Route path="/admin/site-content" element={<AdminSiteContent />} />
+                <Route path="/admin/image-upscaler" element={<AdminImageUpscaler />} />
+                <Route path="/admin/image-studio" element={<AdminImageStudio />} />
+                <Route path="/admin/scheduled-alerts" element={<AdminScheduledAlerts />} />
+                <Route path="/admin/team" element={<AdminTeam />} />
+                <Route path="/admin/duplicate-products" element={<AdminDuplicateProducts />} />
 
                 <Route path="/admin/categories" element={<AdminCategories />} />
                 <Route path="/admin/bulk-upload" element={<AdminBulkUpload />} />
@@ -83,7 +112,7 @@ const App = () => (
                 <Route path="/admin/analytics" element={<AdminAnalytics />} />
                 <Route path="/admin/customers" element={<AdminCustomers />} />
                 <Route path="/admin/settings" element={<AdminSettings />} />
-                
+
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </CartProvider>

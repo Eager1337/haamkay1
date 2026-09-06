@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Search, Phone, ShoppingBag, Menu, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Search, Phone, ShoppingBag, Menu, X, Heart, PackageSearch } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/contexts/CartContext';
 import NotificationBell from '@/components/NotificationBell';
@@ -17,10 +17,25 @@ const navLinks = [
 
 const Header = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { totalItems } = useCart();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Always close menus when the page changes so navigation never feels stuck.
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+    setIsSearchOpen(false);
+  }, [location.pathname]);
+
+  const submitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = searchQuery.trim();
+    setIsSearchOpen(false);
+    navigate(q ? `/categories?q=${encodeURIComponent(q)}` : '/categories');
+  };
+
 
   return (
     <motion.header
@@ -102,12 +117,21 @@ const Header = () => {
                 <span className="text-sm">+232 76 682 626</span>
               </a>
               
+              <Link to="/wishlist" className="p-2 text-foreground/80 hover:text-gold transition-colors" aria-label="Wishlist">
+                <Heart className="w-5 h-5" />
+              </Link>
+
+              <Link to="/my-orders" className="p-2 text-foreground/80 hover:text-gold transition-colors" aria-label="My orders">
+                <PackageSearch className="w-5 h-5" />
+              </Link>
+
               <Link to="/cart" className="relative p-2 text-foreground/80 hover:text-gold transition-colors">
                 <ShoppingBag className="w-5 h-5" />
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-gold text-teal-darker text-xs rounded-full flex items-center justify-center font-medium">
                   {totalItems}
                 </span>
               </Link>
+
             </div>
           </div>
         </div>
@@ -138,6 +162,20 @@ const Header = () => {
                     {link.name}
                   </Link>
                 ))}
+                <Link
+                  to="/wishlist"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="py-3 px-4 rounded-lg text-base font-medium text-foreground/80 hover:bg-muted"
+                >
+                  My Wishlist
+                </Link>
+                <Link
+                  to="/my-orders"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="py-3 px-4 rounded-lg text-base font-medium text-foreground/80 hover:bg-muted"
+                >
+                  My Orders
+                </Link>
                 <Link
                   to="/cart"
                   onClick={() => setIsMobileMenuOpen(false)}
@@ -178,7 +216,7 @@ const Header = () => {
             exit={{ opacity: 0, y: -20 }}
             className="absolute top-full left-0 right-0 bg-card border-b border-border p-4"
           >
-            <div className="container mx-auto">
+            <form className="container mx-auto" onSubmit={submitSearch}>
               <input
                 type="text"
                 value={searchQuery}
@@ -187,7 +225,7 @@ const Header = () => {
                 className="w-full bg-muted border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold"
                 autoFocus
               />
-            </div>
+            </form>
           </motion.div>
         )}
       </AnimatePresence>
