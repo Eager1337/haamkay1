@@ -3,13 +3,13 @@ import { Users, Mail, Phone, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 
-interface Customer {
+type Customer = {
   id: string;
   display_name: string;
   phone_number: string;
   how_found_us: string | null;
   created_at: string;
-}
+};
 
 const AdminCustomers = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -22,7 +22,19 @@ const AdminCustomers = () => {
       .select('id, display_name, phone_number, how_found_us, created_at')
       .order('created_at', { ascending: false })
       .then(({ data }) => {
-        if (data) setCustomers(data as Customer[]);
+        if (data) {
+          setCustomers(
+            data
+              .map((c) => ({
+                id: c.id,
+                display_name: c.display_name?.trim() || 'Guest',
+                phone_number: c.phone_number?.trim() || '',
+                how_found_us: c.how_found_us || null,
+                created_at: c.created_at ?? new Date().toISOString(),
+              }))
+              .filter((c) => c.display_name || c.phone_number)
+          );
+        }
         setLoading(false);
       });
   }, []);
