@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'google/gemini-3.5-flash',
+        model: 'google/gemini-3.6-flash',
         messages: [
           { role: 'system', content: 'You write short, warm, professional team bios for Haamkay Enterprises, a luxury retail store in Freetown, Sierra Leone. 2-3 sentences, third person, no placeholders.' },
           { role: 'user', content: `Name: ${name}\nRole: ${role || 'Team member'}\nNotes: ${notes || 'none'}\n\nWrite the bio only.` },

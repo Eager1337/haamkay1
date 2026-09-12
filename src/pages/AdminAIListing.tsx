@@ -14,6 +14,8 @@ interface Draft {
   price: number;
   description: string;
   stock: number;
+  sizes: string[];
+  colors: string[];
   status: 'pending' | 'analyzing' | 'ready' | 'published' | 'error';
   error?: string;
 }
@@ -54,7 +56,7 @@ const AdminAIListing = () => {
       });
       added.push({
         image: data.publicUrl, path, name: '', category: '', price: 0, description: '',
-        stock: 1, status: 'pending',
+        stock: 1, sizes: [], colors: [], status: 'pending',
       });
     }
 
@@ -113,6 +115,8 @@ const AdminAIListing = () => {
       description: d.description,
       stock: d.stock,
       images: [d.image],
+      sizes: d.sizes,
+      colors: d.colors,
       status: 'pending',
     });
 
@@ -210,6 +214,20 @@ const AdminAIListing = () => {
                 rows={3}
                 className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground"
               />
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  value={d.sizes.join(', ')}
+                  onChange={e => update(i, { sizes: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                  placeholder="Sizes (e.g. S, M, L)"
+                  className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground"
+                />
+                <input
+                  value={d.colors.join(', ')}
+                  onChange={e => update(i, { colors: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                  placeholder="Colors"
+                  className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground"
+                />
+              </div>
               <div className="flex items-center gap-2">
                 <input
                   type="number"

@@ -1,7 +1,7 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { requireAdmin, serviceClient } from '../_shared/admin.ts';
 
-const MODELS = ['google/gemini-3-pro-image', 'google/gemini-3.1-flash-image', 'google/gemini-2.5-flash-image'];
+const MODELS = ['google/gemini-3.6-flash-image', 'google/gemini-3-pro-image', 'google/gemini-3.1-flash-image', 'google/gemini-2.5-flash-image'];
 
 const ENHANCE_PROMPT =
   'Upscale and enhance this product photo to ultra sharp 8K studio quality. Keep the product identical — same shape, colour, branding and details. Remove noise and blur, fix lighting, boost clarity and micro-detail, clean the background, and produce a premium e-commerce catalogue image.';
