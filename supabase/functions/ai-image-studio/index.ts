@@ -1,51 +1,57 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { requireAdmin, serviceClient } from '../_shared/admin.ts';
 
-const MODELS = ['google/gemini-3.6-flash-image', 'google/gemini-3-pro-image', 'google/gemini-3.1-flash-image', 'google/gemini-2.5-flash-image'];
+const MODELS = ['google/gemini-3.6-flash', 'google/gemini-2.0-flash', 'google/gemini-1.5-pro'];
 
 const ENHANCE_PROMPT =
-  'Upscale and enhance this product photo to ultra sharp 8K studio quality. Keep the product identical — same shape, colour, branding and details. Remove noise and blur, fix lighting, boost clarity and micro-detail, clean the background, and produce a premium e-commerce catalogue image.';
+  'Upscale and enhance this product photo to ultra sharp 8K studio quality. Keep the product identical — same shape, colour, branding and details. Remove noise and blur, fix lighting, boost clarity. Perfect for luxury e-commerce.';
 
 async function callGateway(apiKey: string, imageUrl: string, prompt: string) {
   let lastError = '';
   for (const model of MODELS) {
-    const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model,
-        modalities: ['image', 'text'],
-        messages: [
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: prompt },
-              { type: 'image_url', image_url: { url: imageUrl } },
-            ],
-          },
-        ],
-      }),
-    });
+    try {
+      const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          modalities: ['image', 'text'],
+          messages: [
+            {
+              role: 'user',
+              content: [
+                { type: 'text', text: prompt },
+                { type: 'image_url', image_url: { url: imageUrl } },
+              ],
+            },
+          ],
+        }),
+      });
 
-    if (res.status === 429 || res.status === 402) {
-      return { status: res.status, error: res.status === 429 ? 'Rate limit reached — try again shortly.' : 'AI credits exhausted. Please top up to continue.' };
-    }
+      if (res.status === 429 || res.status === 402) {
+        return { status: res.status, error: res.status === 429 ? 'Rate limit reached — try again shortly.' : 'AI credits exhausted. Please top up to continue.' };
+      }
 
-    if (!res.ok) {
-      lastError = `${model}: ${res.status} ${await res.text()}`;
+      if (!res.ok) {
+        lastError = `${model}: ${res.status}`;
+        continue;
+      }
+
+      const json = await res.json();
+      const message = json.choices?.[0]?.message;
+      const dataUrl: string | undefined = message?.images?.[0]?.image_url?.url;
+      if (!dataUrl) {
+        lastError = `${model}: no image returned`;
+        continue;
+      }
+      return { dataUrl, text: typeof message?.content === 'string' ? message.content : '' };
+    } catch (err) {
+      console.error(`Gateway error with ${model}:`, err);
+      lastError = `${model}: connection error`;
       continue;
     }
-
-    const json = await res.json();
-    const message = json.choices?.[0]?.message;
-    const dataUrl: string | undefined = message?.images?.[0]?.image_url?.url;
-    if (!dataUrl) {
-      lastError = `${model}: no image returned`;
-      continue;
-    }
-    return { dataUrl, text: typeof message?.content === 'string' ? message.content : '' };
   }
-  return { status: 502, error: lastError || 'Image model unavailable' };
+  return { status: 502, error: 'Image processing unavailable - please try again shortly' };
 }
 
 Deno.serve(async (req) => {
@@ -90,23 +96,30 @@ Deno.serve(async (req) => {
     }
 
     // Persist the generated image to storage so it can be attached to a product.
-    const base64 = result.dataUrl.split(',')[1] ?? '';
-    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-    const path = `images/ai-${Date.now()}-${crypto.randomUUID().slice(0, 8)}.png`;
-    const svc = serviceClient();
-    const { error: upErr } = await svc.storage.from('product-media').upload(path, bytes, { contentType: 'image/png' });
-    if (upErr) throw upErr;
-    const { data: pub } = svc.storage.from('product-media').getPublicUrl(path);
-    await svc.from('media_assets').insert({
-      url: pub.publicUrl, path, file_name: path.split('/').pop(), media_type: 'image', size_bytes: bytes.length,
-    });
+    try {
+      const base64 = result.dataUrl.split(',')[1] ?? '';
+      const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+      const path = `images/ai-${Date.now()}-${crypto.randomUUID().slice(0, 8)}.png`;
+      const svc = serviceClient();
+      const { error: upErr } = await svc.storage.from('product-media').upload(path, bytes, { contentType: 'image/png' });
+      if (upErr) throw upErr;
+      const { data: pub } = svc.storage.from('product-media').getPublicUrl(path);
+      await svc.from('media_assets').insert({
+        url: pub.publicUrl, path, file_name: path.split('/').pop(), media_type: 'image', size_bytes: bytes.length,
+      });
 
-    return new Response(JSON.stringify({ url: pub.publicUrl, note: result.text ?? '' }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+      return new Response(JSON.stringify({ url: pub.publicUrl, note: result.text ?? '' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    } catch (storageErr) {
+      console.error('Storage error:', storageErr);
+      return new Response(JSON.stringify({ error: 'Could not save processed image' }), {
+        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
   } catch (err) {
     console.error('ai-image-studio failed:', err);
-    return new Response(JSON.stringify({ error: (err as Error).message }), {
+    return new Response(JSON.stringify({ error: 'Service error - please try again' }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
