@@ -1,0 +1,20 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- White background circle -->
+  <circle cx="100" cy="100" r="100" fill="white"/>
+  
+  <!-- Gold H lettering -->
+  <g fill="#D4AF37">
+    <!-- Left vertical bar -->
+    <rect x="40" y="35" width="18" height="130" rx="3"/>
+    <!-- Right vertical bar -->
+    <rect x="142" y="35" width="18" height="130" rx="3"/>
+    <!-- Top horizontal bar -->
+    <rect x="40" y="62" width="120" height="16" rx="3"/>
+    <!-- Bottom horizontal bar -->
+    <rect x="40" y="122" width="120" height="16" rx="3"/>
+    <!-- Curved accent above -->
+    <path d="M 50 58 Q 100 40 150 58" stroke="#D4AF37" stroke-width="8" fill="none" stroke-linecap="round"/>
+    <!-- Curved accent below -->
+    <path d="M 50 142 Q 100 160 150 142" stroke="#D4AF37" stroke-width="8" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>
