@@ -1,7 +1,7 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { requireAdmin } from '../_shared/admin.ts';
 
-const GATEWAY_MODEL = 'google/gemini-3.5-flash';
+const GATEWAY_MODEL = 'google/gemini-2.5-flash';
 const GEMINI_MODEL = 'gemini-2.5-flash';
 const MAX_IMAGES = 20;
 
@@ -170,7 +170,6 @@ Deno.serve(async (req) => {
       const attempts: Array<() => Promise<ReturnType<typeof normalise>>> = [];
       if (geminiKey) attempts.push(() => viaGemini(geminiKey, url, categories));
       if (gatewayKey) attempts.push(() => viaGateway(gatewayKey, url, categories));
-      if (geminiKey) attempts.push(() => viaGemini(geminiKey, url, categories));
 
       let lastError = 'Unknown error';
       for (let i = 0; i < attempts.length; i++) {

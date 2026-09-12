@@ -14,6 +14,8 @@ interface DraftRow {
   description: string | null;
   stock: number;
   images: string[];
+  sizes: string[];
+  colors: string[];
   status: string;
   created_at: string;
 }
@@ -43,6 +45,7 @@ const AdminAIQueue = () => {
   const save = async (d: DraftRow) => {
     await supabase.from('ai_drafts').update({
       name: d.name, category: d.category, price: d.price, description: d.description, stock: d.stock,
+      sizes: d.sizes, colors: d.colors,
     }).eq('id', d.id);
   };
 
@@ -60,6 +63,7 @@ const AdminAIQueue = () => {
     const { data: product, error } = await supabase.from('products').insert({
       name: d.name, category: d.category, price: Number(d.price),
       description: d.description, stock: Number(d.stock), images: d.images, videos: [],
+      sizes: d.sizes, colors: d.colors,
     }).select('id').single();
 
     if (error) {
@@ -165,6 +169,24 @@ const AdminAIQueue = () => {
                 disabled={filter !== 'pending'}
                 className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground"
               />
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  value={(d.sizes ?? []).join(', ')}
+                  onChange={e => patch(d.id, { sizes: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                  onBlur={() => save(d)}
+                  placeholder="Sizes"
+                  disabled={filter !== 'pending'}
+                  className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground"
+                />
+                <input
+                  value={(d.colors ?? []).join(', ')}
+                  onChange={e => patch(d.id, { colors: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                  onBlur={() => save(d)}
+                  placeholder="Colors"
+                  disabled={filter !== 'pending'}
+                  className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground"
+                />
+              </div>
               {filter === 'pending' ? (
                 <div className="flex items-center gap-2">
                   <input
