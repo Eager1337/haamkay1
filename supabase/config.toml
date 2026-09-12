@@ -1,1 +1,13 @@
 project_id = "pcwyueagjkabmieoccew"
+
+[functions.ai-product-draft]
+verify_jwt = true
+
+[functions.ai-image-studio]
+verify_jwt = true
+
+[functions.ai-team-bio]
+verify_jwt = true
+
+[functions.send-push]
+verify_jwt = true
