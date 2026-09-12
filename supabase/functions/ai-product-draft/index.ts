@@ -97,17 +97,17 @@ Deno.serve(async (req) => {
         if (!res.ok) {
           const details = await res.text();
           console.error(`OpenAI error [${res.status}]: ${details}`);
-          return { image: url, error: `AI error ${res.status}` };
+          return { image: url, error: `AI service unavailable. Please try again in a moment.` };
         }
 
         const json = await res.json();
         const call = json.choices?.[0]?.message?.tool_calls?.[0];
-        if (!call) return { image: url, error: 'No listing returned' };
+        if (!call) return { image: url, error: 'Unable to process image' };
         const draft = JSON.parse(call.function.arguments);
         return { image: url, draft: normalizeDraft(draft) };
       } catch (err) {
         console.error(`Failed to process image ${url}:`, err);
-        return { image: url, error: (err as Error).message };
+        return { image: url, error: 'Processing error - please try again' };
       }
     }));
 
@@ -116,7 +116,7 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error('ai-product-draft failed:', err);
-    return new Response(JSON.stringify({ error: (err as Error).message }), {
+    return new Response(JSON.stringify({ error: 'Service temporarily unavailable' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
