@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Plus, Edit, Trash2, Star, Upload, Package, Image, Video,
-  FolderOpen, Download, RefreshCw, Search, Eye, Copy, Layers
+  FolderOpen, Download, RefreshCw, Search, Eye, Copy, Layers, Activity, ArrowRight
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -280,6 +280,24 @@ const AdminDashboard = () => {
           <div className="text-muted-foreground text-sm">Uploads Today</div>
         </div>
       </div>
+
+      <Link
+        to="/admin/activity"
+        className="group mb-8 flex flex-col gap-4 overflow-hidden rounded-2xl border border-gold/25 bg-gradient-card p-5 transition-colors hover:border-gold/50 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div className="flex items-center gap-4">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gold/15 text-gold">
+            <Activity className="h-6 w-6" />
+          </span>
+          <div>
+            <p className="font-serif text-lg font-bold text-foreground">New: Activity Log</p>
+            <p className="text-sm text-muted-foreground">See recent orders, catalog additions and customer alerts in one timeline.</p>
+          </div>
+        </div>
+        <span className="inline-flex items-center gap-2 self-end text-sm font-semibold text-gold sm:self-auto">
+          Open activity <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+        </span>
+      </Link>
 
       {/* Toolbar */}
       <div className="flex items-center gap-4 mb-6">

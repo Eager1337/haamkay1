@@ -1,10 +1,6 @@
 import { requireAdmin } from '../_shared/admin.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
-};
+import { fetchAsInlineData, geminiGenerateJsonFromImage, GeminiError } from '../_shared/gemini.ts';
+import { corsHeaders } from '../_shared/cors.ts';
 
 const SYSTEM = `You are a product listing assistant for Haamkay Enterprises, a luxury retail store in Freetown, Sierra Leone.
 Prices are in Sierra Leonean Leones (Le). You look at a product photo and produce a complete, ready-to-publish listing.
@@ -34,8 +30,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    const apiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!apiKey) throw new Error('OPENAI_API_KEY is not configured');
+    const apiKey = Deno.env.get('GEMINI_API_KEY');
+    if (!apiKey) {
+      return new Response(JSON.stringify({ error: 'AI service is not configured' }), {
+        status: 503,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const body = await req.json();
     const images: string[] = Array.isArray(body?.images) ? body.images.slice(0, 12) : [];
@@ -49,65 +50,19 @@ Deno.serve(async (req) => {
 
     const results = await Promise.all(images.map(async (url) => {
       try {
-        const res = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: 'gpt-4o',
-            messages: [
-              { role: 'system', content: SYSTEM },
-              {
-                role: 'user',
-                content: [
-                  {
-                    type: 'text',
-                    text: `Create a listing for this product.${
-                      categories.length ? ` Pick the single best category from this list: ${categories.join(', ')}. If none fit, suggest a new short category name.` : ''
-                    }`,
-                  },
-                  { type: 'image_url', image_url: { url } },
-                ],
-              },
-            ],
-            tools: [{
-              type: 'function',
-              function: {
-                name: 'create_listing',
-                description: 'Return the product listing fields',
-                parameters: {
-                  type: 'object',
-                  properties: {
-                    name: { type: 'string' },
-                    category: { type: 'string' },
-                    price: { type: 'number', description: 'Retail price in Sierra Leonean Leones' },
-                    description: { type: 'string' },
-                    stock: { type: 'number' },
-                    tags: { type: 'array', items: { type: 'string' } },
-                    confidence: { type: 'number' },
-                  },
-                  required: ['name', 'category', 'price', 'description'],
-                  additionalProperties: false,
-                },
-              },
-            }],
-            tool_choice: { type: 'function', function: { name: 'create_listing' } },
-          }),
-        });
-
-        if (!res.ok) {
-          const details = await res.text();
-          console.error(`OpenAI error [${res.status}]: ${details}`);
-          return { image: url, error: `AI service unavailable. Please try again in a moment.` };
-        }
-
-        const json = await res.json();
-        const call = json.choices?.[0]?.message?.tool_calls?.[0];
-        if (!call) return { image: url, error: 'Unable to process image' };
-        const draft = JSON.parse(call.function.arguments);
+        const source = await fetchAsInlineData(url);
+        const draft = await geminiGenerateJsonFromImage(
+          apiKey,
+          source,
+          SYSTEM,
+          `Create a listing for this product.${
+            categories.length ? ` Pick the single best category from this list: ${categories.join(', ')}. If none fit, suggest a new short category name.` : ''
+          } Return one JSON object with name, category, price, description, stock, tags, and confidence.`,
+        );
         return { image: url, draft: normalizeDraft(draft) };
       } catch (err) {
         console.error(`Failed to process image ${url}:`, err);
-        return { image: url, error: 'Processing error - please try again' };
+        return { image: url, error: err instanceof GeminiError ? err.message : 'Could not process this image' };
       }
     }));
 
@@ -116,7 +71,7 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error('ai-product-draft failed:', err);
-    return new Response(JSON.stringify({ error: 'Service temporarily unavailable' }), {
+    return new Response(JSON.stringify({ error: err instanceof GeminiError ? err.message : 'Service temporarily unavailable' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

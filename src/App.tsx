@@ -33,6 +33,7 @@ import AdminDuplicateProducts from "./pages/AdminDuplicateProducts";
 import AdminImageStudio from "./pages/AdminImageStudio";
 import AdminScheduledAlerts from "./pages/AdminScheduledAlerts";
 import AdminTeam from "./pages/AdminTeam";
+import AdminActivity from "./pages/AdminActivity";
 import NotificationToaster from "./components/NotificationToaster";
 import AnalyticsProvider from "./components/AnalyticsProvider";
 import ScrollToTop from "./components/ScrollToTop";
@@ -104,6 +105,7 @@ const App = () => (
                 <Route path="/admin/image-studio" element={<AdminImageStudio />} />
                 <Route path="/admin/scheduled-alerts" element={<AdminScheduledAlerts />} />
                 <Route path="/admin/team" element={<AdminTeam />} />
+                <Route path="/admin/activity" element={<AdminActivity />} />
                 <Route path="/admin/duplicate-products" element={<AdminDuplicateProducts />} />
 
                 <Route path="/admin/categories" element={<AdminCategories />} />

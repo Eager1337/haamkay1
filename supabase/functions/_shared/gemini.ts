@@ -103,3 +103,49 @@ export async function geminiGenerateText(apiKey: string, systemPrompt: string, u
   const parts: Array<{ text?: string }> = json.candidates?.[0]?.content?.parts ?? [];
   return parts.map((p) => p.text ?? '').join('').trim();
 }
+
+/** Analyzes an image and returns a JSON object, rejecting malformed model output. */
+export async function geminiGenerateJsonFromImage(
+  apiKey: string,
+  source: { data: string; mimeType: string },
+  systemPrompt: string,
+  userPrompt: string,
+): Promise<Record<string, unknown>> {
+  const res = await fetch(`${BASE_URL}/${GEMINI_TEXT_MODEL}:generateContent?key=${apiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      contents: [{
+        role: 'user',
+        parts: [
+          { text: userPrompt },
+          { inlineData: { mimeType: source.mimeType, data: source.data } },
+        ],
+      }],
+      generationConfig: { responseMimeType: 'application/json' },
+    }),
+  });
+
+  if (!res.ok) {
+    const details = await res.text();
+    console.error(`Gemini JSON error [${res.status}]: ${details}`);
+    const { status, message } = friendlyStatus(res.status);
+    throw new GeminiError(status, message);
+  }
+
+  const json = await res.json();
+  const text = json.candidates?.[0]?.content?.parts
+    ?.map((part: { text?: string }) => part.text ?? '')
+    .join('')
+    .trim();
+  if (!text) throw new GeminiError(502, 'The AI returned an empty response — please try again.');
+
+  try {
+    const parsed = JSON.parse(text);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Expected an object');
+    return parsed as Record<string, unknown>;
+  } catch {
+    throw new GeminiError(502, 'The AI returned an invalid listing — please try again.');
+  }
+}

@@ -1,4 +1,4 @@
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { corsHeaders } from '../_shared/cors.ts';
 import { serviceClient } from '../_shared/admin.ts';
 
 interface IncomingItem {

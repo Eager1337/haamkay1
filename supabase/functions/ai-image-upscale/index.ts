@@ -1,4 +1,4 @@
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { corsHeaders } from '../_shared/cors.ts';
 import { requireAdmin, serviceClient } from '../_shared/admin.ts';
 import { fetchAsInlineData, geminiGenerateImage, GeminiError } from '../_shared/gemini.ts';
 

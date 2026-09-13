@@ -4,7 +4,7 @@ import {
   LayoutDashboard, FolderOpen, ShoppingCart, BarChart3, Settings, Users,
   Package, LogOut, Layers, Sparkles, Bell, Images, CalendarClock, Boxes, Menu, X,
   Inbox, FileSpreadsheet, History, Music2, ExternalLink, MessageSquareQuote,
-  ZoomIn, Copy, Wand2, AlarmClock, UserSquare2
+  ZoomIn, Copy, Wand2, AlarmClock, UserSquare2, Activity
 } from 'lucide-react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
@@ -44,6 +44,7 @@ const navGroups = [
       { name: 'Orders', path: '/admin/orders', icon: ShoppingCart },
       { name: 'Customers', path: '/admin/customers', icon: Users },
       { name: 'Analytics', path: '/admin/analytics', icon: BarChart3 },
+      { name: 'Activity Log', path: '/admin/activity', icon: Activity },
       { name: 'Settings', path: '/admin/settings', icon: Settings },
     ],
   },
