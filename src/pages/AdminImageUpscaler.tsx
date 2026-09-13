@@ -1,7 +1,9 @@
 import { useRef, useState } from 'react';
-import { Upload, Download, Loader2, ImageIcon, Zap, Film } from 'lucide-react';
+import { Upload, Download, Loader2, ImageIcon, Film, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { validateMediaFile } from '@/lib/fileValidation';
 
 const IMAGE_TARGET = 7680; // 8K for photos
 const VIDEO_TARGETS = [1920, 2560, 3840] as const; // video upscale options
@@ -14,42 +16,76 @@ const AdminImageUpscaler = () => {
   const [resultUrl, setResultUrl] = useState<string>('');
   const [resultExt, setResultExt] = useState<'png' | 'webm'>('png');
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [aiStage, setAiStage] = useState(false);
   const [progress, setProgress] = useState(0);
   const [videoTarget, setVideoTarget] = useState<number>(3840);
   const [originalDims, setOriginalDims] = useState<{ w: number; h: number } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = (file: File | undefined) => {
+  const handleFile = async (file: File | undefined) => {
     if (!file) return;
     const isVideo = file.type.startsWith('video/');
     const isImage = file.type.startsWith('image/');
     if (!isVideo && !isImage) return toast.error('Please upload a photo or a video file');
 
-    const url = URL.createObjectURL(file);
+    const validation = validateMediaFile(file, isVideo ? 'videos' : 'images');
+    if (!validation.valid) return toast.error(validation.error ?? 'Invalid file');
+
     setKind(isVideo ? 'video' : 'image');
-    setSourceUrl(url);
     setResultUrl('');
     setProgress(0);
     setOriginalDims(null);
 
-    if (isImage) {
-      const img = new Image();
-      img.onload = () => setOriginalDims({ w: img.naturalWidth, h: img.naturalHeight });
-      img.src = url;
-    } else {
+    if (isVideo) {
+      const url = URL.createObjectURL(file);
+      setSourceUrl(url);
       const v = document.createElement('video');
       v.onloadedmetadata = () => setOriginalDims({ w: v.videoWidth, h: v.videoHeight });
       v.src = url;
+      return;
+    }
+
+    // Images are uploaded first so the AI upscale function (server-side) can fetch and process them.
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      const path = `images/upscale-src-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from('product-media').upload(path, file, { contentType: file.type });
+      if (error) throw error;
+      const { data } = supabase.storage.from('product-media').getPublicUrl(path);
+      setSourceUrl(data.publicUrl);
+      const img = new Image();
+      img.onload = () => setOriginalDims({ w: img.naturalWidth, h: img.naturalHeight });
+      img.src = data.publicUrl;
+    } catch (e) {
+      toast.error((e as Error).message || 'Upload failed');
+    } finally {
+      setUploading(false);
     }
   };
 
   const upscaleImage = async () => {
+    setAiStage(true);
+    let baseUrl = sourceUrl;
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-image-upscale', { body: { imageUrl: sourceUrl } });
+      if (error) throw error;
+      if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
+      baseUrl = (data as { url: string }).url;
+      toast.success('AI enhancement applied — finishing the resize…');
+    } catch (e) {
+      toast.error(`${(e as Error).message || 'AI enhance failed'} — applying a plain resize instead.`);
+    } finally {
+      setAiStage(false);
+    }
+
     const img = new Image();
     img.crossOrigin = 'anonymous';
     await new Promise<void>((resolve, reject) => {
       img.onload = () => resolve();
       img.onerror = () => reject(new Error('Failed to load image'));
-      img.src = sourceUrl;
+      img.src = baseUrl;
     });
 
     const scale = Math.min(IMAGE_TARGET / img.naturalWidth, IMAGE_TARGET / img.naturalHeight);
@@ -144,7 +180,7 @@ const AdminImageUpscaler = () => {
   };
 
   return (
-    <AdminLayout title="Media Upscaler" subtitle="Free 8K photo & up-to-4K video upscaling — runs in your browser">
+    <AdminLayout title="Media Upscaler" subtitle="AI-enhanced 8K photo upscaling, plus up-to-4K video resizing">
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Source */}
         <div className="space-y-4">
@@ -159,13 +195,14 @@ const AdminImageUpscaler = () => {
             </div>
 
             <label className="flex flex-col items-center justify-center gap-2 px-4 py-8 rounded-xl border border-dashed border-gold/40 text-gold cursor-pointer hover:bg-gold/10 transition-colors">
-              <Upload className="w-6 h-6" />
-              <span className="text-sm">Click to upload a photo or video</span>
+              {uploading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Upload className="w-6 h-6" />}
+              <span className="text-sm">{uploading ? 'Uploading…' : 'Click to upload a photo or video'}</span>
               <input
                 ref={fileRef}
                 type="file"
                 accept="image/*,video/*"
                 className="hidden"
+                disabled={uploading}
                 onChange={e => handleFile(e.target.files?.[0])}
               />
             </label>
@@ -200,13 +237,13 @@ const AdminImageUpscaler = () => {
 
           <button
             onClick={run}
-            disabled={!sourceUrl || busy}
+            disabled={!sourceUrl || busy || uploading}
             className="btn-gold w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : kind === 'video' ? <Film className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
+            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : kind === 'video' ? <Film className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
             {busy
-              ? kind === 'video' ? `Upscaling video… ${progress}%` : 'Upscaling…'
-              : kind === 'video' ? 'Upscale video' : 'Upscale photo to 8K'}
+              ? kind === 'video' ? `Upscaling video… ${progress}%` : aiStage ? 'Enhancing with AI…' : 'Finishing resize…'
+              : kind === 'video' ? 'Upscale video' : 'AI-enhance & upscale to 8K'}
           </button>
         </div>
 
