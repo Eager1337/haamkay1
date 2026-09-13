@@ -80,9 +80,10 @@ const AdminAIListing = () => {
 
     setAnalyzing(false);
 
-    if (error) {
-      toast.error('AI analysis failed. Please try again.');
-      setDrafts(prev => prev.map(d => (d.status === 'analyzing' ? { ...d, status: 'error', error: 'AI failed' } : d)));
+    if (error || data?.error) {
+      const message = data?.error ?? error?.message ?? 'AI analysis failed. Please try again.';
+      toast.error(message);
+      setDrafts(prev => prev.map(d => (d.status === 'analyzing' ? { ...d, status: 'error', error: message } : d)));
       return;
     }
 
@@ -93,7 +94,14 @@ const AdminAIListing = () => {
       if (!match.draft) return { ...d, status: 'error', error: match.error ?? 'No result' };
       return { ...d, ...match.draft, status: 'ready' };
     }));
-    toast.success('AI listings ready — review and send to the approval queue.');
+    const failed = results.filter(r => !r.draft).length;
+    if (failed && failed === results.length) {
+      toast.error(results[0]?.error ?? 'The AI could not read those photos.');
+    } else if (failed) {
+      toast.warning(`${results.length - failed} listing(s) ready · ${failed} could not be read.`);
+    } else {
+      toast.success('AI listings ready — review and send to the approval queue.');
+    }
   };
 
   const update = (index: number, patch: Partial<Draft>) =>

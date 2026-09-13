@@ -4,6 +4,16 @@
 export const GEMINI_TEXT_MODEL = 'gemini-3.8-flash';
 export const GEMINI_IMAGE_MODEL = 'gemini-3.1-flash-image';
 
+/**
+ * Models tried in order for text/vision work. If Google retires a model the API
+ * answers 404 NOT_FOUND, so we fall through to the next one instead of failing.
+ */
+export const GEMINI_TEXT_MODEL_FALLBACKS = [
+  GEMINI_TEXT_MODEL,
+  'gemini-2.5-flash',
+  'gemini-flash-latest',
+];
+
 const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 
 export class GeminiError extends Error {
@@ -102,4 +112,72 @@ export async function geminiGenerateText(apiKey: string, systemPrompt: string, u
   const json = await res.json();
   const parts: Array<{ text?: string }> = json.candidates?.[0]?.content?.parts ?? [];
   return parts.map((p) => p.text ?? '').join('').trim();
+}
+
+
+/**
+ * Calls Gemini with a prompt plus optional images and returns parsed JSON matching
+ * `responseSchema`. Retries the next model in GEMINI_TEXT_MODEL_FALLBACKS on 404
+ * (model retired / unavailable to this key).
+ */
+export async function geminiGenerateJSON<T>(
+  apiKey: string,
+  systemPrompt: string,
+  userPrompt: string,
+  images: Array<{ data: string; mimeType: string }>,
+  responseSchema: Record<string, unknown>,
+): Promise<T> {
+  const parts: Array<Record<string, unknown>> = [{ text: userPrompt }];
+  for (const image of images) {
+    parts.push({ inlineData: { mimeType: image.mimeType, data: image.data } });
+  }
+
+  let lastError: GeminiError | null = null;
+
+  for (const model of GEMINI_TEXT_MODEL_FALLBACKS) {
+    const res = await fetch(`${BASE_URL}/${model}:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        contents: [{ role: 'user', parts }],
+        generationConfig: {
+          responseMimeType: 'application/json',
+          responseSchema,
+        },
+      }),
+    });
+
+    if (res.status === 404) {
+      const details = await res.text();
+      console.error(`Gemini model ${model} unavailable [404]: ${details}`);
+      lastError = new GeminiError(502, 'AI model unavailable — trying an alternative.');
+      continue;
+    }
+
+    if (!res.ok) {
+      const details = await res.text();
+      console.error(`Gemini JSON error [${res.status}] on ${model}: ${details}`);
+      const { status, message } = friendlyStatus(res.status);
+      throw new GeminiError(status, message);
+    }
+
+    const json = await res.json();
+    const text = (json.candidates?.[0]?.content?.parts ?? [])
+      .map((part: { text?: string }) => part.text ?? '')
+      .join('')
+      .trim();
+
+    if (!text) throw new GeminiError(502, 'The AI returned an empty response — please try again.');
+
+    try {
+      return JSON.parse(text) as T;
+    } catch {
+      const match = text.match(/\{[\s\S]*\}/);
+      if (match) return JSON.parse(match[0]) as T;
+      throw new GeminiError(502, 'The AI response could not be read — please try again.');
+    }
+  }
+
+  throw lastError ?? new GeminiError(502, 'AI service unavailable — please try again shortly.');
 }
