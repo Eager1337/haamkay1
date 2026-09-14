@@ -1,0 +1,29 @@
+name: Deploy Supabase Edge Functions
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch containing the Supabase function code
+        required: true
+        default: github-sync
+        type: string
+
+jobs:
+  deploy-ai-product-draft:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout selected branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy ai-product-draft
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase functions deploy ai-product-draft --project-ref pcwyueagjkabmieoccew --no-verify-jwt
