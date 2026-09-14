@@ -7,6 +7,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
 };
 
+const MAX_IMAGES = 20;
+
 const SYSTEM = `You are a product listing assistant for Haamkay Enterprises, a luxury retail store in Freetown, Sierra Leone.
 Prices are in Sierra Leonean Leones (Le). You look at a product photo and produce a complete, ready-to-publish listing.
 Be concrete and commercial: no placeholders, no "unknown". Estimate a realistic retail price in Leones for the Sierra Leone market.
@@ -55,20 +57,12 @@ function userPrompt(categories: string[]) {
   }`;
 }
 
-/** Gemini path — uses the GEMINI_API_KEY secret with automatic model fallback. */
 async function draftWithGemini(apiKey: string, imageUrl: string, categories: string[]) {
   const inline = await fetchAsInlineData(imageUrl);
-  const draft = await geminiGenerateJSON<RawDraft>(
-    apiKey,
-    SYSTEM,
-    userPrompt(categories),
-    [inline],
-    LISTING_SCHEMA,
-  );
+  const draft = await geminiGenerateJSON<RawDraft>(apiKey, SYSTEM, userPrompt(categories), [inline], LISTING_SCHEMA);
   return normalizeDraft(draft);
 }
 
-/** OpenAI path — used when only OPENAI_API_KEY is configured. */
 async function draftWithOpenAI(apiKey: string, imageUrl: string, categories: string[]) {
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -146,7 +140,7 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const images: string[] = Array.isArray(body?.images) ? body.images.slice(0, 12) : [];
+    const images: string[] = Array.isArray(body?.images) ? body.images.slice(0, MAX_IMAGES) : [];
     const categories: string[] = Array.isArray(body?.categories) ? body.categories : [];
     if (images.length === 0) {
       return new Response(JSON.stringify({ error: 'No images provided' }), {
@@ -168,9 +162,7 @@ Deno.serve(async (req) => {
         return { image: url, draft: await draftWithOpenAI(openaiKey!, url, categories) };
       } catch (err) {
         console.error(`Failed to process image ${url}:`, err);
-        const message = err instanceof GeminiError || err instanceof Error
-          ? err.message
-          : 'Processing error - please try again';
+        const message = err instanceof GeminiError || err instanceof Error ? err.message : 'Processing error - please try again';
         return { image: url, error: message };
       }
     }));
