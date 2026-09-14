@@ -20,6 +20,8 @@ interface Draft {
   error?: string;
 }
 
+const MAX_AI_IMAGES = 20;
+
 const AdminAIListing = () => {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
@@ -34,10 +36,20 @@ const AdminAIListing = () => {
 
   const handleUpload = async (files: FileList | null) => {
     if (!files?.length) return;
+    const remaining = MAX_AI_IMAGES - drafts.length;
+    if (remaining <= 0) {
+      toast.error(`AI Listing Studio is limited to ${MAX_AI_IMAGES} images per batch.`);
+      return;
+    }
+    const selected = Array.from(files).slice(0, remaining);
+    if (files.length > remaining) {
+      toast.warning(`Only ${remaining} more image${remaining === 1 ? '' : 's'} can be added. The batch limit is ${MAX_AI_IMAGES}.`);
+    }
+
     setUploading(true);
     const added: Draft[] = [];
 
-    for (const file of Array.from(files)) {
+    for (const file of selected) {
       const validation = validateMediaFile(file, 'images');
       if (!validation.valid) {
         toast.error(`${file.name}: ${validation.error}`);
@@ -60,7 +72,7 @@ const AdminAIListing = () => {
       });
     }
 
-    setDrafts(prev => [...prev, ...added]);
+    setDrafts(prev => [...prev, ...added].slice(0, MAX_AI_IMAGES));
     setUploading(false);
     if (added.length) toast.success(`${added.length} photo(s) uploaded. Run the AI to build listings.`);
   };
@@ -71,11 +83,15 @@ const AdminAIListing = () => {
       toast.info('Nothing to analyze — upload some photos first.');
       return;
     }
+    if (pending.length > MAX_AI_IMAGES) {
+      toast.error(`AI analysis is limited to ${MAX_AI_IMAGES} images per run.`);
+      return;
+    }
     setAnalyzing(true);
     setDrafts(prev => prev.map(d => (d.status === 'pending' || d.status === 'error' ? { ...d, status: 'analyzing' } : d)));
 
     const { data, error } = await supabase.functions.invoke('ai-product-draft', {
-      body: { images: pending.map(d => d.image), categories },
+      body: { images: pending.slice(0, MAX_AI_IMAGES).map(d => d.image), categories },
     });
 
     setAnalyzing(false);
@@ -146,12 +162,12 @@ const AdminAIListing = () => {
   return (
     <AdminLayout
       title="AI Listing Studio"
-      subtitle="Upload photos — AI drafts the listing, then approve it in the AI queue"
+      subtitle={`Upload up to ${MAX_AI_IMAGES} photos — AI drafts the listings, then approve them in the AI queue`}
       actions={
         <>
-          <button onClick={runAI} disabled={analyzing} className="btn-gold flex items-center gap-2 !py-2 !px-4 text-sm">
+          <button onClick={runAI} disabled={analyzing || !drafts.some(d => d.status === 'pending' || d.status === 'error')} className="btn-gold flex items-center gap-2 !py-2 !px-4 text-sm disabled:opacity-50">
             {analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
-            {analyzing ? 'Analyzing…' : 'Run AI'}
+            {analyzing ? 'Analyzing…' : `Run AI (${drafts.filter(d => d.status === 'pending' || d.status === 'error').length}/${MAX_AI_IMAGES})`}
           </button>
           <button onClick={publishAll} className="px-4 py-2 rounded-lg border border-gold text-gold text-sm hover:bg-gold/10">
             Send all to queue
@@ -159,17 +175,18 @@ const AdminAIListing = () => {
         </>
       }
     >
-      <label className="block card-luxury p-6 sm:p-10 text-center border-2 border-dashed border-gold/40 cursor-pointer hover:border-gold transition-colors mb-6">
+      <label className={`block card-luxury p-6 sm:p-10 text-center border-2 border-dashed border-gold/40 cursor-pointer hover:border-gold transition-colors mb-6 ${drafts.length >= MAX_AI_IMAGES ? 'opacity-60 cursor-not-allowed' : ''}`}>
         <input
           type="file"
           accept="image/*"
           multiple
+          disabled={drafts.length >= MAX_AI_IMAGES || uploading}
           className="hidden"
-          onChange={e => handleUpload(e.target.files)}
+          onChange={e => { void handleUpload(e.target.files); e.currentTarget.value = ''; }}
         />
         <Upload className="w-8 h-8 text-gold mx-auto mb-3" />
-        <p className="text-foreground font-medium">{uploading ? 'Uploading…' : 'Tap to upload product photos'}</p>
-        <p className="text-xs text-muted-foreground mt-1">JPG, PNG, WEBP or GIF · up to 10MB each</p>
+        <p className="text-foreground font-medium">{uploading ? 'Uploading…' : drafts.length >= MAX_AI_IMAGES ? `20-image limit reached` : 'Tap to upload product photos'}</p>
+        <p className="text-xs text-muted-foreground mt-1">{drafts.length}/{MAX_AI_IMAGES} photos · JPG, PNG, WEBP or GIF · up to 10MB each</p>
       </label>
 
       {drafts.length === 0 ? (
@@ -193,64 +210,22 @@ const AdminAIListing = () => {
                 )}
               </div>
 
-              <input
-                value={d.name}
-                onChange={e => update(i, { name: e.target.value })}
-                placeholder="Product name"
-                className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground"
-              />
+              <input value={d.name} onChange={e => update(i, { name: e.target.value })} placeholder="Product name" className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground" />
               <div className="grid grid-cols-2 gap-2">
-                <input
-                  value={d.category}
-                  onChange={e => update(i, { category: e.target.value })}
-                  placeholder="Category"
-                  list="admin-categories"
-                  className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground"
-                />
-                <input
-                  type="number"
-                  value={d.price}
-                  onChange={e => update(i, { price: Number(e.target.value) })}
-                  placeholder="Price (Le)"
-                  className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground"
-                />
+                <input value={d.category} onChange={e => update(i, { category: e.target.value })} placeholder="Category" list="admin-categories" className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground" />
+                <input type="number" value={d.price} onChange={e => update(i, { price: Number(e.target.value) })} placeholder="Price (Le)" className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground" />
               </div>
-              <textarea
-                value={d.description}
-                onChange={e => update(i, { description: e.target.value })}
-                placeholder="Description"
-                rows={3}
-                className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground"
-              />
+              <textarea value={d.description} onChange={e => update(i, { description: e.target.value })} placeholder="Description" rows={3} className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground" />
               <div className="grid grid-cols-2 gap-2">
-                <input
-                  value={d.sizes.join(', ')}
-                  onChange={e => update(i, { sizes: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
-                  placeholder="Sizes (e.g. S, M, L)"
-                  className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground"
-                />
-                <input
-                  value={d.colors.join(', ')}
-                  onChange={e => update(i, { colors: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
-                  placeholder="Colors"
-                  className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground"
-                />
+                <input value={d.sizes.join(', ')} onChange={e => update(i, { sizes: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} placeholder="Sizes (e.g. S, M, L)" className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground" />
+                <input value={d.colors.join(', ')} onChange={e => update(i, { colors: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} placeholder="Colors" className="bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground" />
               </div>
               <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  value={d.stock}
-                  onChange={e => update(i, { stock: Number(e.target.value) })}
-                  className="w-20 bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground"
-                />
-                <button
-                  onClick={() => publish(i)}
-                  disabled={d.status === 'published'}
-                  className="flex-1 btn-gold !py-2 text-sm flex items-center justify-center gap-2 disabled:opacity-50"
-                >
+                <input type="number" min="0" value={d.stock} onChange={e => update(i, { stock: Number(e.target.value) })} className="w-20 bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground" />
+                <button onClick={() => publish(i)} disabled={d.status === 'published'} className="flex-1 btn-gold !py-2 text-sm flex items-center justify-center gap-2 disabled:opacity-50">
                   <Check className="w-4 h-4" /> Send to queue
                 </button>
-                <button onClick={() => remove(i)} className="p-2 rounded-lg text-muted-foreground hover:text-destructive">
+                <button onClick={() => remove(i)} className="p-2 rounded-lg text-muted-foreground hover:text-destructive" aria-label={`Remove ${d.name || 'photo'}`}>
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
