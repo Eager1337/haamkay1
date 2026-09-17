@@ -7,9 +7,11 @@ export const GEMINI_IMAGE_MODEL = 'gemini-3.1-flash-image';
 
 export const GEMINI_TEXT_MODEL_FALLBACKS = [
   GEMINI_TEXT_MODEL,
+  'gemini-3.7-flash',
   'gemini-3.6-flash',
+  'gemini-3.5-flash',
   'gemini-2.5-flash',
-  'gemini-flash-latest',
+  'gemini-2.5-flash-lite',
 ];
 
 const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
@@ -115,7 +117,7 @@ export async function geminiGenerateJSON<T>(
         }),
       });
       if (res.status === 404) { await res.text(); lastError = new GeminiError(502, 'AI model unavailable — trying an alternative.'); break; }
-      if (res.status === 429 || res.status >= 500) {
+      if (res.status === 400 || res.status === 408 || res.status === 429 || res.status >= 500) {
         const details = await res.text();
         console.error(`Gemini temporary error [${res.status}] on ${model}: ${details}`);
         lastError = new GeminiError(res.status, friendlyStatus(res.status).message);
