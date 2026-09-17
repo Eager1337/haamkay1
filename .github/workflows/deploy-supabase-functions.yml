@@ -1,4 +1,5 @@
 name: Deploy Supabase Edge Functions
+# Uses API deployment mode to avoid Docker/CI deployment races.
 
 on:
   push:
