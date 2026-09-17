@@ -20,10 +20,10 @@ jobs:
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.13.3
 
       - name: Deploy ai-product-draft
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
-          supabase functions deploy ai-product-draft --project-ref pcwyueagjkabmieoccew --no-verify-jwt
+          supabase functions deploy ai-product-draft --use-api --project-ref pcwyueagjkabmieoccew --no-verify-jwt
