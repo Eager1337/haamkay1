@@ -27,4 +27,5 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
-          supabase functions deploy ai-product-draft --use-api --project-ref pcwyueagjkabmieoccew --no-verify-jwt
+          # Project ref verified from the Supabase project dashboard URL.
+          supabase functions deploy ai-product-draft --use-api --project-ref dkduukiesklpivqccnco --no-verify-jwt
