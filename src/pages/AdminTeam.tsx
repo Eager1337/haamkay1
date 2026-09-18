@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Users, Plus, Trash2, Upload, Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { invokeAi } from '@/lib/ai';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { validateMediaFile } from '@/lib/fileValidation';
 
@@ -44,13 +45,12 @@ const AdminTeam = () => {
   const aiBio = async () => {
     if (!form.name.trim()) return toast.error('Add a name first');
     setBusy(true);
-    const { data, error } = await supabase.functions.invoke('ai-team-bio', {
-      body: { name: form.name, role: form.role, notes: form.bio, photo: form.photo_url },
+    const { data, error } = await invokeAi<{ bio?: string }>('ai-team-bio', {
+      name: form.name, role: form.role, notes: form.bio, photo: form.photo_url,
     });
     setBusy(false);
-    if (error) return toast.error(error.message);
-    const bio = (data as { bio?: string; error?: string })?.bio;
-    if (!bio) return toast.error((data as { error?: string })?.error ?? 'AI could not write a bio');
+    const bio = data?.bio?.trim();
+    if (!bio) return toast.error(error ?? 'AI could not write a bio');
     setForm(f => ({ ...f, bio }));
     toast.success('Bio written by AI');
   };
