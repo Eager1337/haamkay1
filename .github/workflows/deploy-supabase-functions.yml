@@ -1,5 +1,5 @@
 name: Deploy Supabase Edge Functions
-# Uses API deployment mode to avoid Docker/CI deployment races.
+# Deploy the AI listing function to the Supabase project used by the production frontend.
 
 on:
   push:
@@ -23,9 +23,9 @@ jobs:
         with:
           version: 2.13.3
 
-      - name: Deploy ai-product-draft
+      - name: Deploy ai-product-draft to production Supabase project
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
-          # Project ref verified from the Supabase project dashboard URL.
-          supabase functions deploy ai-product-draft --use-api --project-ref dkduukiesklpivqccnco --no-verify-jwt
+          # This is the project referenced by VITE_SUPABASE_URL in the production frontend.
+          supabase functions deploy ai-product-draft --use-api --project-ref pcwyueagjkabmieoccew --no-verify-jwt
