@@ -14,6 +14,7 @@ export const GEMINI_TEXT_MODEL_FALLBACKS = [
 
 const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 
+// Deployment smoke-trigger: keep this shared client on the github-sync deployment path.
 export class GeminiError extends Error {
   status: number;
   constructor(status: number, message: string) {
