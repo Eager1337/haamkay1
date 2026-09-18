@@ -1,5 +1,8 @@
 name: Deploy Supabase Edge Functions
-# Deploy all AI edge functions to the Supabase project used by the production frontend.
+# Deploy the AI functions to the Supabase project used by the production frontend.
+# Every function that imports _shared/ has to be redeployed when _shared changes, and the
+# frontend calls all four AI functions — deploying only ai-product-draft left the Image
+# Studio, Upscaler and Team bio pages pointed at a project that never received them.
 
 on:
   push:
@@ -10,9 +13,24 @@ on:
       - 'supabase/config.toml'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-supabase-functions
+  cancel-in-progress: false
+
 jobs:
   deploy-ai-functions:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        function:
+          - ai-product-draft
+          - ai-image-studio
+          - ai-image-upscale
+          - ai-team-bio
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,11 +40,12 @@ jobs:
         with:
           version: 2.13.3
 
-      - name: Deploy AI functions to production Supabase project
+      - name: Deploy ${{ matrix.function }} to production Supabase project
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          PROJECT_REF: pcwyueagjkabmieoccew
         run: |
           # This is the project referenced by VITE_SUPABASE_URL in the production frontend.
-          for fn in ai-product-draft ai-image-studio ai-image-upscale ai-team-bio; do
-            supabase functions deploy "$fn" --use-api --project-ref pcwyueagjkabmieoccew --no-verify-jwt
-          done
+          # Each function does its own admin check via requireAdmin(), hence --no-verify-jwt.
+          # Secrets (GEMINI_API_KEY, ...) live in the Supabase project, not in this workflow.
+          supabase functions deploy "${{ matrix.function }}" --use-api --project-ref "$PROJECT_REF" --no-verify-jwt

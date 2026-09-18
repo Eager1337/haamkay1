@@ -1,7 +1,6 @@
+import { jsonResponse, preflight } from '../_shared/cors.ts';
 import { requireAdmin } from '../_shared/admin.ts';
 import { fetchAsInlineData, geminiGenerateJSON, GeminiError } from '../_shared/gemini.ts';
-
-import { corsHeaders } from '../_shared/cors.ts';
 
 const MAX_IMAGES = 20;
 const MAX_CONCURRENT = 3;
@@ -119,28 +118,32 @@ async function processBatch(urls: string[], categories: string[], geminiKey?: st
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers: corsHeaders });
+  if (req.method === 'OPTIONS') return preflight();
   try {
     const adminId = await requireAdmin(req);
-    if (!adminId) return new Response(JSON.stringify({ error: 'Admin access required' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!adminId) return jsonResponse({ error: 'Admin access required' }, 401);
 
     const geminiKey = Deno.env.get('GEMINI_API_KEY');
     const openaiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!geminiKey && !openaiKey) return new Response(JSON.stringify({ error: 'AI is not configured yet — add a GEMINI_API_KEY (or OPENAI_API_KEY) secret.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!geminiKey && !openaiKey) {
+      return jsonResponse({ error: 'AI is not configured yet — add a GEMINI_API_KEY (or OPENAI_API_KEY) secret to this Supabase project.' }, 400);
+    }
 
     const body = await req.json();
     const images: string[] = Array.isArray(body?.images)
       ? body.images.filter((url: unknown): url is string => typeof url === 'string' && /^https?:\/\//.test(url)).slice(0, MAX_IMAGES) : [];
     const categories: string[] = Array.isArray(body?.categories)
       ? body.categories.filter((value: unknown): value is string => typeof value === 'string').slice(0, 100) : [];
-    if (!images.length) return new Response(JSON.stringify({ error: 'No valid image URLs were provided.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!images.length) return jsonResponse({ error: 'No valid image URLs were provided.' }, 400);
 
     const results = await processBatch(images, categories, geminiKey, openaiKey);
     const successCount = results.filter(r => r.draft).length;
-    return new Response(JSON.stringify({ results, count: results.length, successCount, failedCount: results.length - successCount }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return jsonResponse({ results, count: results.length, successCount, failedCount: results.length - successCount });
   } catch (err) {
     console.error('ai-product-draft failed:', err);
-    const message = err instanceof Error && err.message ? err.message : 'Service temporarily unavailable. Please try again.';
-    return new Response(JSON.stringify({ error: message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    // A GeminiError already carries an actionable message ("add the missing secret",
+    // "rate limited", ...) — the old blanket 500 hid it from admins and from the logs.
+    if (err instanceof GeminiError) return jsonResponse({ error: err.message }, err.status);
+    return jsonResponse({ error: 'Service temporarily unavailable. Please try again.' }, 500);
   }
 });

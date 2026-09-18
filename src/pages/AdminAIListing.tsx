@@ -4,8 +4,8 @@ import { Sparkles, Upload, Check, Trash2, Loader2, Wand2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { invokeAi } from '@/lib/ai';
 import { validateMediaFile } from '@/lib/fileValidation';
-import { invokeAI } from '@/lib/aiInvoke';
 
 interface Draft {
   image: string;
@@ -71,15 +71,16 @@ const AdminAIListing = () => {
     try {
       for (let start = 0; start < pending.length; start += AI_BATCH_SIZE) {
         const batch = pending.slice(start, start + AI_BATCH_SIZE);
-        try {
-          const data = await invokeAI<{ results?: AIResult[] }>('ai-product-draft', { images: batch.map(d => d.image), categories });
-          const results = data.results ?? [];
+        // invokeAi keeps the real reason (missing secret, bad key, rate limit…) that
+        // supabase-js normally throws away for non-2xx function responses.
+        const { data, error } = await invokeAi<{ results?: AIResult[] }>('ai-product-draft', { images: batch.map(d => d.image), categories });
+        if (error) {
+          allResults.push(...batch.map(d => ({ image: d.image, error })));
+        } else {
+          const results = (data?.results ?? []) as AIResult[];
           allResults.push(...results);
           const returned = new Set(results.map(r => r.image));
           for (const item of batch) if (!returned.has(item.image)) allResults.push({ image: item.image, error: 'No AI result was returned for this image.' });
-        } catch (err) {
-          const message = err instanceof Error ? err.message : 'AI service request failed.';
-          allResults.push(...batch.map(d => ({ image: d.image, error: message })));
         }
         completed += batch.length;
         toast.info(`AI processed ${Math.min(completed, pending.length)}/${pending.length} photos.`);
@@ -98,9 +99,12 @@ const AdminAIListing = () => {
     }));
     setAnalyzing(false);
 
-    const failed = allResults.filter(r => !r.draft).length;
+    const failures = allResults.filter(r => !r.draft);
+    const failed = failures.length;
     const succeeded = allResults.filter(r => !!r.draft).length;
-    if (!succeeded) toast.error(allResults[0]?.error || 'AI could not process these photos. Check the AI configuration and try again.');
+    // Tell the admin *why* nothing came back — it is almost always one fixable thing
+    // (missing GEMINI_API_KEY secret, expired key, rate limit) rather than a mystery.
+    if (!succeeded) toast.error(failures[0]?.error ?? 'AI could not process these photos. Check the AI configuration and try again.');
     else if (failed) toast.warning(`${succeeded} listing(s) ready · ${failed} photo(s) need another try.`);
     else toast.success(`${succeeded} AI listing(s) ready — review them before sending to the queue.`);
   };

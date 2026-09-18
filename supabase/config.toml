@@ -1,4 +1,7 @@
 project_id = "pcwyueagjkabmieoccew"
+
+# Each AI function checks the caller itself (requireAdmin), so the gateway does not
+# have to reject unauthenticated probes before the function can answer politely.
 [functions.ai-product-draft]
 verify_jwt = false
 

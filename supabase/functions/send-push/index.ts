@@ -1,4 +1,4 @@
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { corsHeaders } from '../_shared/cors.ts';
 import webpush from 'npm:web-push@3.6.7';
 import { requireAdmin, serviceClient } from '../_shared/admin.ts';
 
