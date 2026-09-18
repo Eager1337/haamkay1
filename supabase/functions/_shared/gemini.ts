@@ -3,13 +3,20 @@
 
 // Current stable production models for multimodal listing/image work.
 export const GEMINI_TEXT_MODEL = 'gemini-2.5-flash';
-export const GEMINI_IMAGE_MODEL = 'gemini-3.1-flash-image';
+export const GEMINI_IMAGE_MODEL = 'gemini-2.5-flash-image';
 
 export const GEMINI_TEXT_MODEL_FALLBACKS = [
   GEMINI_TEXT_MODEL,
   'gemini-2.5-flash-lite',
-  'gemini-2.5-flash',
   'gemini-2.0-flash',
+];
+
+// Tried in order; a 404 (model not available for this key) moves to the next one.
+export const GEMINI_IMAGE_MODEL_FALLBACKS = [
+  GEMINI_IMAGE_MODEL,
+  'gemini-3.1-flash-image',
+  'gemini-3.1-flash-image-preview',
+  'gemini-2.5-flash-image-preview',
 ];
 
 const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
@@ -51,28 +58,44 @@ export async function geminiGenerateImage(
   source: { data: string; mimeType: string },
   prompt: string,
 ): Promise<{ data: string; mimeType: string; text: string }> {
-  const res = await fetch(`${BASE_URL}/${GEMINI_IMAGE_MODEL}:generateContent?key=${apiKey}`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: prompt }, { inlineData: { mimeType: source.mimeType, data: source.data } }] }],
-      generationConfig: { responseModalities: ['TEXT', 'IMAGE'] },
-    }),
-  });
-  if (!res.ok) {
-    const details = await res.text();
-    console.error(`Gemini image error [${res.status}]: ${details}`);
-    const { status, message } = friendlyStatus(res.status);
-    throw new GeminiError(status, message);
+  let lastError: GeminiError | null = null;
+  for (const model of GEMINI_IMAGE_MODEL_FALLBACKS) {
+    const res = await fetch(`${BASE_URL}/${model}:generateContent?key=${apiKey}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }, { inlineData: { mimeType: source.mimeType, data: source.data } }] }],
+        generationConfig: { responseModalities: ['TEXT', 'IMAGE'] },
+      }),
+    });
+    if (res.status === 404) {
+      await res.text();
+      console.warn(`Gemini image model ${model} not available for this key; trying next.`);
+      lastError = new GeminiError(502, 'No Gemini image model is available for this API key.');
+      continue;
+    }
+    if (!res.ok) {
+      const details = await res.text();
+      console.error(`Gemini image error [${res.status}] on ${model}: ${details}`);
+      const { status, message } = friendlyStatus(res.status);
+      throw new GeminiError(status, message);
+    }
+    const json = await res.json();
+    const candidate = json.candidates?.[0];
+    const parts: Array<Record<string, unknown>> = candidate?.content?.parts ?? [];
+    let text = '';
+    for (const part of parts) {
+      const inline = (part.inlineData ?? part.inline_data) as { data?: string; mimeType?: string; mime_type?: string } | undefined;
+      if (inline?.data) return { data: inline.data, mimeType: inline.mimeType ?? inline.mime_type ?? 'image/png', text };
+      if (typeof part.text === 'string') text += part.text;
+    }
+    const reason: string = candidate?.finishReason ?? json.promptFeedback?.blockReason ?? '';
+    console.error(`Gemini image: no image returned from ${model}. finishReason=${reason} text=${text.slice(0, 200)}`);
+    if (/SAFETY|PROHIBITED|BLOCK/i.test(reason)) {
+      throw new GeminiError(400, 'The AI declined to edit this image (content policy). Try a different photo or instruction.');
+    }
+    throw new GeminiError(502, text ? `The AI did not return an image: ${text.slice(0, 160)}` : 'The AI did not return an image — please try again.');
   }
-  const json = await res.json();
-  const parts: Array<Record<string, unknown>> = json.candidates?.[0]?.content?.parts ?? [];
-  let text = '';
-  for (const part of parts) {
-    const inline = (part.inlineData ?? part.inline_data) as { data?: string; mimeType?: string; mime_type?: string } | undefined;
-    if (inline?.data) return { data: inline.data, mimeType: inline.mimeType ?? inline.mime_type ?? 'image/png', text };
-    if (typeof part.text === 'string') text += part.text;
-  }
-  throw new GeminiError(502, 'The AI did not return an image — please try again.');
+  throw lastError ?? new GeminiError(502, 'AI service unavailable — please try again shortly.');
 }
 
 export async function geminiGenerateText(apiKey: string, systemPrompt: string, userPrompt: string): Promise<string> {

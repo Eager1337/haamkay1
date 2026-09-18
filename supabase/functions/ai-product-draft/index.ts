@@ -1,11 +1,7 @@
 import { requireAdmin } from '../_shared/admin.ts';
 import { fetchAsInlineData, geminiGenerateJSON, GeminiError } from '../_shared/gemini.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
-};
+import { corsHeaders } from '../_shared/cors.ts';
 
 const MAX_IMAGES = 20;
 const MAX_CONCURRENT = 3;
@@ -144,6 +140,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ results, count: results.length, successCount, failedCount: results.length - successCount }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
     console.error('ai-product-draft failed:', err);
-    return new Response(JSON.stringify({ error: 'Service temporarily unavailable. Please try again.' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const message = err instanceof Error && err.message ? err.message : 'Service temporarily unavailable. Please try again.';
+    return new Response(JSON.stringify({ error: message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });

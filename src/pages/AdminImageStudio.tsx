@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Sparkles, Wand2, Upload, Loader2, Check, Film, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { invokeAI } from '@/lib/aiInvoke';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { validateMediaFile } from '@/lib/fileValidation';
 
@@ -75,14 +76,15 @@ const AdminImageStudio = () => {
     if (!sourceUrl) return toast.error(videoUrl ? 'Grab a frame from the video first' : 'Pick or upload a photo first');
     if (mode === 'edit' && !prompt.trim()) return toast.error('Describe the edit you want');
     setBusy(true);
-    const { data, error } = await supabase.functions.invoke('ai-image-studio', {
-      body: { imageUrl: sourceUrl, mode, prompt },
-    });
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    if ((data as { error?: string })?.error) return toast.error((data as { error: string }).error);
-    setResultUrl((data as { url: string }).url);
-    toast.success(mode === 'enhance' ? 'Enhanced to studio quality' : 'Edit applied');
+    try {
+      const data = await invokeAI<{ url: string }>('ai-image-studio', { imageUrl: sourceUrl, mode, prompt });
+      setResultUrl(data.url);
+      toast.success(mode === 'enhance' ? 'Enhanced to studio quality' : 'Edit applied');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'AI request failed');
+    } finally {
+      setBusy(false);
+    }
   };
 
   const attachImage = async () => {

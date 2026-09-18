@@ -1,4 +1,4 @@
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { corsHeaders } from '../_shared/cors.ts';
 import { requireAdmin, serviceClient } from '../_shared/admin.ts';
 import { fetchAsInlineData, geminiGenerateImage, GeminiError } from '../_shared/gemini.ts';
 
@@ -6,7 +6,7 @@ const ENHANCE_PROMPT =
   'Upscale and enhance this product photo to ultra sharp, high resolution studio quality. Keep the product identical — same shape, colour, branding and details. Remove noise and blur, fix lighting, boost clarity. Perfect for luxury e-commerce.';
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers: corsHeaders });
 
   try {
     const adminId = await requireAdmin(req);
@@ -17,7 +17,11 @@ Deno.serve(async (req) => {
     }
 
     const apiKey = Deno.env.get('GEMINI_API_KEY');
-    if (!apiKey) throw new Error('GEMINI_API_KEY is not configured');
+    if (!apiKey) {
+      return new Response(JSON.stringify({ error: 'AI is not configured yet — add a GEMINI_API_KEY secret to the Supabase project.' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const body = await req.json();
     const imageUrl: string = String(body?.imageUrl ?? '');
@@ -76,7 +80,8 @@ Deno.serve(async (req) => {
     }
   } catch (err) {
     console.error('ai-image-studio failed:', err);
-    return new Response(JSON.stringify({ error: 'Service error - please try again' }), {
+    const message = err instanceof Error && err.message ? err.message : 'Service error - please try again';
+    return new Response(JSON.stringify({ error: message }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

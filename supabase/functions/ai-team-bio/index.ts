@@ -1,9 +1,9 @@
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { corsHeaders } from '../_shared/cors.ts';
 import { requireAdmin } from '../_shared/admin.ts';
 import { geminiGenerateText, GeminiError } from '../_shared/gemini.ts';
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers: corsHeaders });
 
   try {
     const adminId = await requireAdmin(req);
@@ -14,7 +14,11 @@ Deno.serve(async (req) => {
     }
 
     const apiKey = Deno.env.get('GEMINI_API_KEY');
-    if (!apiKey) throw new Error('GEMINI_API_KEY is not configured');
+    if (!apiKey) {
+      return new Response(JSON.stringify({ error: 'AI is not configured yet — add a GEMINI_API_KEY secret to the Supabase project.' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const body = await req.json();
     const name = String(body?.name ?? '').slice(0, 120);

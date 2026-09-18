@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Upload, Download, Loader2, ImageIcon, Film, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { invokeAI } from '@/lib/aiInvoke';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { validateMediaFile } from '@/lib/fileValidation';
 
@@ -69,10 +70,8 @@ const AdminImageUpscaler = () => {
     setAiStage(true);
     let baseUrl = sourceUrl;
     try {
-      const { data, error } = await supabase.functions.invoke('ai-image-upscale', { body: { imageUrl: sourceUrl } });
-      if (error) throw error;
-      if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
-      baseUrl = (data as { url: string }).url;
+      const data = await invokeAI<{ url: string }>('ai-image-upscale', { imageUrl: sourceUrl });
+      baseUrl = data.url;
       toast.success('AI enhancement applied — finishing the resize…');
     } catch (e) {
       toast.error(`${(e as Error).message || 'AI enhance failed'} — applying a plain resize instead.`);

@@ -1,18 +1,17 @@
 name: Deploy Supabase Edge Functions
-# Deploy the AI listing function to the Supabase project used by the production frontend.
+# Deploy all AI edge functions to the Supabase project used by the production frontend.
 
 on:
   push:
     branches:
       - github-sync
     paths:
-      - 'supabase/functions/ai-product-draft/**'
-      - 'supabase/functions/_shared/**'
+      - 'supabase/functions/**'
       - 'supabase/config.toml'
   workflow_dispatch:
 
 jobs:
-  deploy-ai-product-draft:
+  deploy-ai-functions:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -23,9 +22,11 @@ jobs:
         with:
           version: 2.13.3
 
-      - name: Deploy ai-product-draft to production Supabase project
+      - name: Deploy AI functions to production Supabase project
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
           # This is the project referenced by VITE_SUPABASE_URL in the production frontend.
-          supabase functions deploy ai-product-draft --use-api --project-ref pcwyueagjkabmieoccew --no-verify-jwt
+          for fn in ai-product-draft ai-image-studio ai-image-upscale ai-team-bio; do
+            supabase functions deploy "$fn" --use-api --project-ref pcwyueagjkabmieoccew --no-verify-jwt
+          done
