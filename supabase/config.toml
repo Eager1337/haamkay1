@@ -13,3 +13,12 @@ verify_jwt = false
 
 [functions.ai-team-bio]
 verify_jwt = false
+
+[functions.orders]
+verify_jwt = false
+
+[functions.send-push]
+verify_jwt = false
+
+[functions.slack-notify]
+verify_jwt = false
