@@ -2,25 +2,28 @@
 // Requires a GEMINI_API_KEY secret from https://aistudio.google.com/app/apikey
 
 // Current stable production models for multimodal listing/image work.
-export const GEMINI_TEXT_MODEL = 'gemini-2.5-flash';
-export const GEMINI_IMAGE_MODEL = 'gemini-2.5-flash-image';
+// gemini-2.5-flash was retired for new users (Google returns 404 pointing at
+// gemini-3.6-flash), so the 3.x generation leads every list below.
+export const GEMINI_TEXT_MODEL = 'gemini-3.6-flash';
+export const GEMINI_IMAGE_MODEL = 'gemini-3.1-flash-image';
 
 // Models are tried in order until one answers. Google retires model ids and keys are not
 // enrolled in every model, so a hard single-model dependency turns into an opaque
 // "AI service unavailable" for the admin. Keep the first entry the preferred model.
 export const GEMINI_TEXT_MODEL_FALLBACKS = [
   GEMINI_TEXT_MODEL,
-  'gemini-2.5-flash-lite',
+  'gemini-3.1-flash',
+  'gemini-3.1-flash-lite',
   'gemini-2.0-flash',
 ];
 
-// Image generation needs the same treatment. gemini-2.5-flash-image ("Nano Banana") leads
-// because it is GA and enabled on ordinary AI Studio keys; the newer 3.1 ids stay as
-// fallbacks so the client keeps working as model ids churn underneath us.
+// Image generation needs the same treatment. gemini-3.1-flash-image leads because the
+// 2.5 image ids are being retired underneath existing installs; the older ids stay as
+// fallbacks so keys that still have them keep working.
 export const GEMINI_IMAGE_MODEL_FALLBACKS = [
   GEMINI_IMAGE_MODEL,
-  'gemini-3.1-flash-image',
   'gemini-3.1-flash-image-preview',
+  'gemini-2.5-flash-image',
   'gemini-2.5-flash-image-preview',
 ];
 
