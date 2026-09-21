@@ -17,14 +17,11 @@ export const GEMINI_TEXT_MODEL_FALLBACKS = [
   'gemini-2.0-flash',
 ];
 
-// Image generation needs the same treatment. gemini-3.1-flash-image leads because the
-// 2.5 image ids are being retired underneath existing installs; the older ids stay as
-// fallbacks so keys that still have them keep working.
+// Image generation uses only current image-capable model ids. Retired 2.5 ids are
+// intentionally excluded so admin image tools do not waste requests on known 404s.
 export const GEMINI_IMAGE_MODEL_FALLBACKS = [
   GEMINI_IMAGE_MODEL,
   'gemini-3.1-flash-image-preview',
-  'gemini-2.5-flash-image',
-  'gemini-2.5-flash-image-preview',
 ];
 
 const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';

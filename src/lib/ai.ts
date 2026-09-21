@@ -50,7 +50,7 @@ async function describeFailure(fnName: string, err: unknown): Promise<string> {
   if (UNREACHABLE.test(message)) {
     return `${fnName} could not be reached. Check that it is deployed to this Supabase project and try again.`;
   }
-  if (message && !GENERIC_MESSAGES.test(message)) return message;
+  if (message && !GENERIC_MESSAGES.test(message)) return safeAiMessage(message);
 
   return context?.status
     ? `The AI service returned an error (${context.status}). Please try again.`
@@ -66,22 +66,40 @@ async function readErrorBody(context: unknown): Promise<string | null> {
   }
   // Older/newer clients hand back a plain object instead of a Response.
   const record = context as { error?: unknown; message?: unknown };
-  if (typeof record.error === 'string' && record.error.trim()) return record.error.trim();
+  if (typeof record.error === 'string' && record.error.trim()) return safeAiMessage(record.error);
   if (typeof record.message === 'string' && !GENERIC_MESSAGES.test(record.message) && record.message.trim()) {
-    return record.message.trim();
+    return safeAiMessage(record.message);
   }
   return null;
+}
+
+const RETIRED_GEMINI_MODEL = /models?\/gemini-2\.5-flash|gemini-2\.5-flash/i;
+const RAW_GEMINI_ERROR = /(?:\"?code\"?\s*:\s*404|status\s*:\s*NOT_FOUND|model .* no longer available)/i;
+
+function safeAiMessage(message: string): string | null {
+  const trimmed = message.trim();
+  if (!trimmed) return null;
+  // Older Supabase deployments can still return Google's raw retired-model payload while
+  // the function rollout propagates. Never expose that provider detail in an admin page.
+  if (RETIRED_GEMINI_MODEL.test(trimmed) || RAW_GEMINI_ERROR.test(trimmed)) {
+    return 'The AI service is updating its model configuration. Please try again shortly.';
+  }
+  return trimmed;
 }
 
 function parseErrorBody(raw: string): string | null {
   if (!raw?.trim()) return null;
   try {
     const json: unknown = JSON.parse(raw);
-    if (typeof json === 'string') return json.trim() || null;
+    if (typeof json === 'string') return safeAiMessage(json);
     if (json && typeof json === 'object') {
       const record = json as { error?: unknown; message?: unknown };
-      const message = record.error ?? record.message;
-      if (typeof message === 'string' && message.trim()) return message.trim();
+      const value = record.error ?? record.message;
+      if (typeof value === 'string') return safeAiMessage(value);
+      if (value && typeof value === 'object') {
+        const nested = value as { message?: unknown };
+        if (typeof nested.message === 'string') return safeAiMessage(nested.message);
+      }
     }
   } catch {
     // Not JSON — usually an HTML error page from the edge proxy, which no admin can use.
