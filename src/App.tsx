@@ -39,6 +39,7 @@ import ScrollToTop from "./components/ScrollToTop";
 
 import ProductDetail from "./pages/ProductDetail";
 import Categories from "./pages/Categories";
+import Shop from "./pages/Shop";
 import DailyDrops from "./pages/DailyDrops";
 import Trending from "./pages/Trending";
 import OurStory from "./pages/OurStory";
@@ -68,6 +69,7 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/product/:id" element={<ProductDetail />} />
+                <Route path="/shop" element={<Shop />} />
                 <Route path="/categories" element={<Categories />} />
                 <Route path="/daily-drops" element={<DailyDrops />} />
                 <Route path="/trending" element={<Trending />} />

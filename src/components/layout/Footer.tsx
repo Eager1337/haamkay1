@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Instagram, Facebook, Twitter, Settings, MapPin, Phone, Mail } from 'lucide-react';
+import { Instagram, Facebook, Twitter, Settings, MapPin, Phone, Mail, Clock } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -50,6 +50,11 @@ const Footer = () => {
           <div>
             <h4 className="text-sm md:text-lg font-serif font-semibold text-foreground mb-4 md:mb-6">Quick Links</h4>
             <ul className="space-y-2 md:space-y-3">
+              <li>
+                <Link to="/shop" className="text-muted-foreground hover:text-gold transition-colors text-xs md:text-sm">
+                  Shop All Items
+                </Link>
+              </li>
               <li>
                 <Link to="/categories" className="text-muted-foreground hover:text-gold transition-colors text-xs md:text-sm">
                   All Categories
@@ -121,6 +126,12 @@ const Footer = () => {
                 <a href="mailto:info@haamkay.com" className="text-muted-foreground hover:text-gold text-xs md:text-sm transition-colors">
                   info@haamkay.com
                 </a>
+              </li>
+              <li className="flex items-start gap-2 md:gap-3">
+                <Clock className="w-4 h-4 md:w-5 md:h-5 text-gold flex-shrink-0 mt-0.5" />
+                <span className="text-muted-foreground text-xs md:text-sm">
+                  Mon&ndash;Sat: 9AM&ndash;7PM<br />Sunday: Closed
+                </span>
               </li>
             </ul>
           </div>
