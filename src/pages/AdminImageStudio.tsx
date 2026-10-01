@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Sparkles, Wand2, Upload, Loader2, Check, Film, Camera } from 'lucide-react';
+import { Sparkles, Wand2, Upload, Loader2, Check, Film, Camera, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { invokeAi } from '@/lib/ai';
@@ -72,18 +72,42 @@ const AdminImageStudio = () => {
     toast.success('Frame captured — now enhance or edit it');
   };
 
+  const [history, setHistory] = useState<{ text: string; url: string }[]>([]);
+
   const run = async (mode: 'enhance' | 'edit') => {
-    if (!sourceUrl) return toast.error(videoUrl ? 'Grab a frame from the video first' : 'Pick or upload a photo first');
+    // Chat-style: each new request builds on the latest result, like ChatGPT.
+    const base = resultUrl || sourceUrl;
+    if (!base) return toast.error(videoUrl ? 'Grab a frame from the video first' : 'Pick or upload a photo first');
     if (mode === 'edit' && !prompt.trim()) return toast.error('Describe the edit you want');
     setBusy(true);
-    // invokeAi unwraps the function's own { error } payload, which supabase-js otherwise
-    // replaces with "Edge Function returned a non-2xx status code".
-    const { data, error } = await invokeAi<{ url?: string }>('ai-image-studio', { imageUrl: sourceUrl, mode, prompt });
+    let data: { url?: string } | null = null;
+    let error: string | null = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const r = await invokeAi<{ url?: string }>('ai-image-studio', { imageUrl: base, mode, prompt });
+      data = r.data ?? null; error = r.error ?? null;
+      if (!error && data?.url) break;
+      await new Promise(res => setTimeout(res, 1500));
+    }
     setBusy(false);
-    if (error) return toast.error(error);
-    if (!data?.url) return toast.error('The AI did not return an image — please try again.');
+    if (error || !data?.url) return toast.error('The AI is busy right now — please try that again in a moment.');
     setResultUrl(data.url);
+    setHistory(h => [...h, { text: mode === 'enhance' ? 'Enhance to 8K quality' : prompt.trim(), url: data!.url! }]);
+    setPrompt('');
     toast.success(mode === 'enhance' ? 'Enhanced to studio quality' : 'Edit applied');
+  };
+
+  const download = async (url: string) => {
+    try {
+      const blob = await (await fetch(url)).blob();
+      const href = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = href;
+      a.download = `haamkay-edit-${Date.now()}.${blob.type.includes('jpeg') ? 'jpg' : 'png'}`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(href), 2000);
+    } catch {
+      window.open(url, '_blank');
+    }
   };
 
   const attachImage = async () => {
@@ -214,9 +238,23 @@ const AdminImageStudio = () => {
                 <button onClick={attachImage} className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gold text-teal-darker font-semibold">
                   <Check className="w-4 h-4" /> Save photo to product
                 </button>
-                <a href={resultUrl} target="_blank" rel="noreferrer" className="block text-center text-xs text-muted-foreground underline">Open full size</a>
+                <button onClick={() => download(resultUrl)} className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/50 text-gold font-medium">
+                  <Download className="w-4 h-4" /> Save to my device
+                </button>
               </>
             )}
+          </div>
+
+          {history.length > 0 && (
+            <div className="p-4 rounded-xl border border-border bg-card space-y-3">
+              <p className="text-sm font-medium text-foreground">Edit history — each request builds on the last</p>
+              {history.map((h, i) => (
+                <div key={i} className="flex gap-3 items-center">
+                  <img src={h.url} alt={h.text} className="w-16 h-16 rounded-lg object-cover cursor-pointer" onClick={() => setResultUrl(h.url)} />
+                  <p className="flex-1 text-xs text-muted-foreground">{h.text}</p>
+                  <button onClick={() => download(h.url)} aria-label="Save to device" className="text-gold"><Download className="w-4 h-4" /></button>
+                </div>
+              ))}
           </div>
         </div>
       </div>
