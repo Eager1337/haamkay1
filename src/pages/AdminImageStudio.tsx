@@ -260,6 +260,7 @@ const AdminImageStudio = () => {
         </div>
       </div>
 
+
       <div className="mt-6 p-4 rounded-xl bg-muted/50 border border-border text-xs text-muted-foreground space-y-1">
         <p className="font-medium text-foreground">Working with videos</p>
         <p>• Upload a clip, pause on the moment you like, then grab that frame — the AI can enhance or edit it like any photo.</p>
