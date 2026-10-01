@@ -140,7 +140,7 @@ export async function fetchAsInlineData(url: string): Promise<{ data: string; mi
   return { data: btoa(binary), mimeType };
 }
 
-export async function geminiGenerateImage(
+async function geminiDirectImage(
   apiKey: string,
   source: { data: string; mimeType: string },
   prompt: string,
@@ -279,4 +279,47 @@ export async function geminiGenerateJSON<T>(
   }
 
   throw lastError ?? new GeminiError(502, 'AI service unavailable — please try again shortly.');
+}
+
+
+/** Backup image model through the Lovable AI Gateway, used when the Gemini key is rate limited or unavailable. */
+async function gatewayEditImage(source: { data: string; mimeType: string }, prompt: string) {
+  const key = Deno.env.get('LOVABLE_API_KEY');
+  if (!key) throw new GeminiError(502, 'Backup AI is not configured.');
+  const bytes = Uint8Array.from(atob(source.data), (c) => c.charCodeAt(0));
+  const ext = source.mimeType.includes('png') ? 'png' : source.mimeType.includes('webp') ? 'webp' : 'jpg';
+  const form = new FormData();
+  form.append('model', 'openai/gpt-image-2.5-sunburst');
+  form.append('prompt', prompt);
+  form.append('image', new File([bytes], `source.${ext}`, { type: source.mimeType }));
+  const res = await fetch('https://ai.gateway.lovable.dev/v1/images/edits', {
+    method: 'POST', headers: { Authorization: `Bearer ${key}`, 'X-Lovable-AIG-SDK': 'fetch' }, body: form,
+  });
+  if (!res.ok) {
+    console.error(`Gateway image error [${res.status}]: ${await readErrorBody(res)}`);
+    if (res.status === 402) throw new GeminiError(402, 'AI credits are used up. Please top up to keep editing images.');
+    if (res.status === 429) throw new GeminiError(429, 'The AI is busy right now. Please wait a minute and try again.');
+    throw new GeminiError(502, 'AI image service unavailable. Please try again shortly.');
+  }
+  const json = await res.json();
+  const b64 = json?.data?.[0]?.b64_json;
+  if (!b64) throw new GeminiError(502, 'The AI did not return an image — please try again.');
+  return { data: b64 as string, mimeType: 'image/png', text: '' };
+}
+
+export async function geminiGenerateImage(
+  apiKey: string,
+  source: { data: string; mimeType: string },
+  prompt: string,
+): Promise<{ data: string; mimeType: string; text: string }> {
+  try {
+    return await geminiDirectImage(apiKey, source, prompt);
+  } catch (err) {
+    // Rate limits, quota and model outages on the Gemini key should not block the admin.
+    if (err instanceof GeminiError && [401, 403, 429, 500, 502, 503].includes(err.status) && Deno.env.get('LOVABLE_API_KEY')) {
+      console.error('Gemini image failed, using backup model:', err.message);
+      return await gatewayEditImage(source, prompt);
+    }
+    throw err;
+  }
 }
