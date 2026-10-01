@@ -255,7 +255,8 @@ const AdminImageStudio = () => {
                   <button onClick={() => download(h.url)} aria-label="Save to device" className="text-gold"><Download className="w-4 h-4" /></button>
                 </div>
               ))}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 
