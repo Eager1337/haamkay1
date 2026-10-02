@@ -13,8 +13,7 @@ const heroVideos = [
 
 const HeroSection = () => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [isMuted, setIsMuted] = useState(true);
+  const isMuted = true;
   const [videoLoaded, setVideoLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -29,29 +28,9 @@ const HeroSection = () => {
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.load();
-      if (isPlaying) {
-        videoRef.current.play().catch(() => {});
-      }
+      videoRef.current.play().catch(() => {});
     }
   }, [currentVideoIndex]);
-
-  const togglePlay = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  const toggleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
-  };
 
   return (
     <section className="relative min-h-[85vh] md:min-h-screen flex items-center overflow-hidden">
@@ -95,27 +74,9 @@ const HeroSection = () => {
         <div className="absolute inset-0 bg-teal-darker/40" />
       </div>
 
-      {/* Video Controls */}
+      {/* Video Indicators */}
       <div className="absolute bottom-8 right-8 z-20 flex items-center gap-3">
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={togglePlay}
-          className="w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm border border-border flex items-center justify-center text-foreground hover:text-gold transition-colors"
-        >
-          {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-        </motion.button>
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={toggleMute}
-          className="w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm border border-border flex items-center justify-center text-foreground hover:text-gold transition-colors"
-        >
-          {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-        </motion.button>
-        
-        {/* Video Indicators */}
-        <div className="flex gap-2 ml-4">
+        <div className="flex gap-2">
           {heroVideos.map((_, i) => (
             <button
               key={i}
