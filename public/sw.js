@@ -1,5 +1,5 @@
 /* Haamkay service worker — push messaging + offline app shell. */
-const CACHE = 'haamkay-v2';
+const CACHE = 'haamkay-v3';
 const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest', '/app-icon-192.png', '/app-icon-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -37,7 +37,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets: cache first, refresh in the background.
+  // Only cache fingerprinted build files and icons. Caching anything else (dev modules,
+  // un-hashed scripts) served stale code after updates and left a blank screen.
+  const cacheable = url.pathname.startsWith('/assets/') || /\.(png|ico|svg|webmanifest)$/.test(url.pathname);
+  if (!cacheable) return;
+
   event.respondWith(
     caches.match(req).then((cached) => {
       const network = fetch(req)
