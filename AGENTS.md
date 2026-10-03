@@ -24,3 +24,4 @@ docker compose -f docker-compose.base44.yml up -d
 ## Notes
 - Supabase edge functions live in `supabase/functions/` but run on the hosted Supabase project, not locally.
 - `src/index.css`: the Google Fonts `@import` must come before `@tailwind` directives (CSS spec requires `@import` first).
+- Keep the Vite development component tagger disabled because it injects refs into function components and destabilizes rendering.
