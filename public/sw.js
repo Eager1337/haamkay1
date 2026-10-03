@@ -1,5 +1,5 @@
 /* Haamkay service worker — push messaging + offline app shell. */
-const CACHE = 'haamkay-v3';
+const CACHE = 'haamkay-v4';
 const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest', '/app-icon-192.png', '/app-icon-512.png'];
 
 self.addEventListener('install', (event) => {
