@@ -109,10 +109,10 @@ const Header = () => {
                 <Phone className="w-4 h-4" />
                 <span className="text-sm">+232 76 682 626</span>
               </a>
-              <Link to="/wishlist" className="min-w-11 min-h-11 p-2 inline-flex items-center justify-center rounded-lg text-foreground/80 hover:text-gold hover:bg-muted transition-colors" aria-label="Wishlist">
+              <Link to="/wishlist" className="hidden sm:inline-flex min-w-11 min-h-11 p-2 items-center justify-center rounded-lg text-foreground/80 hover:text-gold hover:bg-muted transition-colors" aria-label="Wishlist">
                 <Heart className="w-5 h-5" />
               </Link>
-              <Link to="/my-orders" className="min-w-11 min-h-11 p-2 inline-flex items-center justify-center rounded-lg text-foreground/80 hover:text-gold hover:bg-muted transition-colors" aria-label="My orders">
+              <Link to="/my-orders" className="hidden md:inline-flex min-w-11 min-h-11 p-2 items-center justify-center rounded-lg text-foreground/80 hover:text-gold hover:bg-muted transition-colors" aria-label="My orders">
                 <PackageSearch className="w-5 h-5" />
               </Link>
               <Link to="/cart" className={`relative min-w-11 min-h-11 p-2 inline-flex items-center justify-center rounded-lg text-foreground/80 hover:text-gold hover:bg-muted transition-colors ${isActive('/cart') ? 'text-gold' : ''}`} aria-label={`Shopping cart${totalItems ? `, ${totalItems} items` : ''}`}>
